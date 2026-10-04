@@ -3,1459 +3,1043 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Witbord</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Vector Studio Canvas</title>
     <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #FFFFFF;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #111;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #FFFFFF;
+            cursor: crosshair;
         }
+
         canvas {
-            touch-action: none;
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+
+        #topbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 48px;
+            background: #FFFFFF;
+            border-bottom: 1px solid #E5E5E5;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 12px;
+            gap: 12px;
+            z-index: 200;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: #FFFFFF;
+            border: 1px solid #CCCCCC;
+            color: #222;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.1s, border-color 0.1s;
+        }
+
+        .btn:hover {
+            background: #F4F4F4;
+            border-color: #999;
+        }
+
+        .btn.active {
+            background: #111;
+            color: #FFF;
+            border-color: #111;
+        }
+
+        .separator {
+            width: 1px;
+            height: 24px;
+            background: #E5E5E5;
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .panel {
+            position: absolute;
+            top: 60px;
+            background: #FFFFFF;
+            border: 1px solid #CCCCCC;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            background: #FAFAFA;
+            border-bottom: 1px solid #E5E5E5;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #layers-panel {
+            right: 16px;
+            width: 220px;
+        }
+
+        .layers-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: #FAFAFA;
+            border: 1px solid #E5E5E5;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .layer-item.active {
+            border-color: #111;
+            background: #F0F0F0;
+            font-weight: 600;
+        }
+
+        .layer-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .layer-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 4px;
+            color: #555;
+        }
+        .layer-btn:hover { color: #000; }
+
+        #zoom-status {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: #FFFFFF;
+            border: 1px solid #CCCCCC;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 150;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        #connection-badge {
+            position: absolute;
+            bottom: 16px;
+            left: 110px;
+            background: #FFFFFF;
+            border: 1px solid #CCCCCC;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 150;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        .status-dot.connected { background: #10B981; }
+
+        input[type="color"] {
+            appearance: none;
+            border: 1px solid #CCCCCC;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
+
+        #text-overlay {
+            position: absolute;
+            background: #FFFFFF;
+            border: 1px solid #111;
+            outline: none;
+            font-family: inherit;
+            font-size: 16px;
+            padding: 6px;
+            z-index: 250;
+            display: none;
+            resize: auto;
+            color: #111;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden select-none">
+<body>
 
-    <header class="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between z-10 shadow-sm flex-shrink-0">
-        <div class="flex items-center space-x-3">
-            <div>
-                <h1 class="font-bold text-slate-900 text-sm leading-tight">WITBOARD canvas</h1>
-                <p class="text-xs text-slate-500">vectoring the vector</p>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button id="tool-brush" onclick="setTool('brush')" class="tool-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 bg-slate-900 text-white shadow-sm transition-all" title="Brush Tool">
-                <i class="fa-solid fa-paint-brush"></i>
-                <span class="hidden sm:inline">Brush</span>
-            </button>
-            <button id="tool-lasso" onclick="setTool('lasso')" class="tool-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 transition-all" title="Lasso Select & Move">
-                <i class="fa-solid fa-lasso"></i>
-                <span class="hidden sm:inline">Lasso Select</span>
-            </button>
-            <button id="tool-lassofill" onclick="setTool('lassofill')" class="tool-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 transition-all" title="Lasso Fill Area">
-                <i class="fa-solid fa-draw-polygon"></i>
-                <span class="hidden sm:inline">Lasso Fill</span>
-            </button>
-            <button id="tool-pan" onclick="setTool('pan')" class="tool-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 transition-all" title="Pan Canvas">
-                <i class="fa-solid fa-hand"></i>
-                <span class="hidden sm:inline">Pan (Space)</span>
-            </button>
-            <div class="h-4 w-px bg-slate-300 mx-1"></div>
-            <button onclick="triggerImageUpload()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all" title="Import Image">
-                <i class="fa-solid fa-image text-sm"></i>
-            </button>
-            <input type="file" id="image-loader" accept="image/*" class="hidden" onchange="handleImageImport(event)">
-        </div>
-
-        <div class="flex items-center space-x-3">
-            <div id="collaborators-container" class="hidden md:flex items-center -space-x-1.5 overflow-hidden">
+    <div id="canvas-container">
+        <div id="topbar">
+            <div class="toolbar-group">
+                <button class="btn active" data-tool="brush" title="Vector Brush">Brush</button>
+                <button class="btn" data-tool="eraser" title="Vector Eraser">Eraser</button>
+                <button class="btn" data-tool="lasso-fill" title="Lasso Fill">Lasso Fill</button>
+                <button class="btn" data-tool="lasso-select" title="Lasso Select & Move">Lasso Select</button>
+                <button class="btn" data-tool="rect" title="Rectangle">Rect</button>
+                <button class="btn" data-tool="circle" title="Circle">Circle</button>
+                <button class="btn" data-tool="line" title="Line">Line</button>
+                <button class="btn" data-tool="text" title="Text">Text</button>
+                <button class="btn" data-tool="pan" title="Pan Hand">Hand</button>
             </div>
 
-            <button onclick="copyRoomLink()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all" title="Share Room Link">
-                <i class="fa-solid fa-share-nodes"></i>
-                <span id="room-code-label" class="font-mono text-xs">Share</span>
-            </button>
+            <div class="separator"></div>
 
-            <button onclick="openRoomModal()" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all" title="Switch Room">
-                <i class="fa-solid fa-door-open text-sm"></i>
-            </button>
-
-            <div class="h-4 w-px bg-slate-200 my-auto"></div>
-
-            <button onclick="undo()" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all" title="Undo (Ctrl+Z)">
-                <i class="fa-solid fa-rotate-left text-sm"></i>
-            </button>
-            <button onclick="redo()" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all" title="Redo (Ctrl+Y)">
-                <i class="fa-solid fa-rotate-right text-sm"></i>
-            </button>
-            <div class="h-4 w-px bg-slate-200 my-auto"></div>
-            <button onclick="exportPNG()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>
-            <button onclick="toggleLayersPanel()" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all relative" title="Toggle Layers">
-                <i class="fa-solid fa-layer-group text-sm"></i>
-            </button>
-        </div>
-    </header>
-
-    <div class="bg-white border-b border-slate-200 px-6 py-2 flex flex-wrap items-center justify-between text-xs gap-4 z-10 flex-shrink-0">
-        <div class="flex items-center space-x-6 flex-wrap gap-y-2">
-            <div class="flex items-center space-x-2">
-                <span class="text-slate-500 font-medium">Color:</span>
-                <input type="color" id="color-picker" value="#0f172a" class="w-7 h-7 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white" onchange="updateBrushColor(this.value)">
-                <div class="flex items-center space-x-1">
-                    <button onclick="setQuickColor('#0f172a')" class="w-5 h-5 rounded-full bg-slate-900 border border-slate-300" title="Dark Slate"></button>
-                    <button onclick="setQuickColor('#475569')" class="w-5 h-5 rounded-full bg-slate-600 border border-slate-300" title="Medium Slate"></button>
-                    <button onclick="setQuickColor('#ef4444')" class="w-5 h-5 rounded-full bg-red-500 border border-slate-300" title="Red"></button>
-                    <button onclick="setQuickColor('#10b981')" class="w-5 h-5 rounded-full bg-emerald-500 border border-slate-300" title="Emerald"></button>
-                    <button onclick="setQuickColor('#3b82f6')" class="w-5 h-5 rounded-full bg-blue-500 border border-slate-300" title="Blue"></button>
-                    <button onclick="setQuickColor('#8b5cf6')" class="w-5 h-5 rounded-full bg-purple-500 border border-slate-300" title="Purple"></button>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-2 border-l border-slate-200 pl-4">
-                <span class="text-slate-500 font-medium">Base Size:</span>
-                <input type="range" id="size-slider" min="2" max="60" value="12" class="w-24 accent-slate-900" oninput="updateBrushSize(this.value)">
-                <span id="size-val" class="w-8 font-mono text-slate-700">12px</span>
-            </div>
-
-            <div class="flex items-center space-x-4 border-l border-slate-200 pl-4">
-                <label class="flex items-center space-x-2 cursor-pointer select-none">
-                    <input type="checkbox" id="toggle-velocity" checked class="rounded text-slate-900 focus:ring-slate-800 w-4 h-4" onchange="toggleVelocityDynamics(this.checked)">
-                    <span class="text-slate-700 font-medium">Velocity Tapering</span>
-                </label>
+            <div class="toolbar-group">
+                <label style="font-size: 12px; font-weight: 500;">Color:</label>
+                <input type="color" id="stroke-color" value="#000000">
                 
-                <div class="flex items-center space-x-2">
-                    <label class="flex items-center space-x-2 cursor-pointer select-none">
-                        <input type="checkbox" id="toggle-smoothing" checked class="rounded text-slate-900 focus:ring-slate-800 w-4 h-4" onchange="toggleSmoothing(this.checked)">
-                        <span class="text-slate-700 font-medium">Stroke Smoothing:</span>
-                    </label>
-                    <input type="range" id="smoothing-slider" min="1" max="15" value="5" class="w-20 accent-slate-900" oninput="updateSmoothingLevel(this.value)">
-                    <span id="smoothing-val" class="w-6 font-mono text-slate-700">5px</span>
-                </div>
+                <label style="font-size: 12px; font-weight: 500; margin-left: 8px;">Size: <span id="size-val">4</span>px</label>
+                <input type="range" id="brush-size" min="1" max="80" value="4" style="width: 80px;">
+
+                <div class="separator"></div>
+
+                <label style="font-size: 12px; font-weight: 500; display:flex; align-items:center; gap:4px;">
+                    <input type="checkbox" id="smoothing-toggle" checked> Flash Smooth: <span id="smooth-val">80</span>%
+                </label>
+                <input type="range" id="smoothing-slider" min="0" max="100" value="80" style="width: 60px;">
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="toolbar-group">
+                <button class="btn" id="btn-undo" title="Undo">Undo</button>
+                <button class="btn" id="btn-redo" title="Redo">Redo</button>
+                <div class="separator"></div>
+                <button class="btn" id="btn-duplicate" title="Duplicate Selected Elements">Duplicate</button>
+                <button class="btn" id="btn-delete" title="Delete Selected Elements">Delete</button>
+                <div class="separator"></div>
+                <button class="btn" id="btn-share-room" title="Copy Collaborative Link">Share Room</button>
+                <button class="btn" id="btn-export" title="Export PNG">Export</button>
             </div>
         </div>
 
-        <div class="flex items-center space-x-3 text-slate-400">
-            <span id="zoom-level" class="font-mono text-slate-600 font-medium">100%</span>
-            <button onclick="resetZoom()" class="hover:text-slate-900 text-xs text-slate-700 font-medium underline">Reset View</button>
+        <div class="panel" id="layers-panel">
+            <div class="panel-header">
+                <span>Layers</span>
+                <button class="layer-btn" id="btn-add-layer" title="Add Layer">+ New</button>
+            </div>
+            <div class="layers-list" id="layers-list">
+            </div>
         </div>
+
+        <div id="zoom-status">100%</div>
+        <div id="connection-badge"><div class="status-dot" id="status-dot"></div><span id="status-text">Solo Mode</span></div>
+
+        <canvas id="board"></canvas>
+
+        <input type="text" id="text-overlay" placeholder="Type text & press Enter...">
     </div>
-
-    <div class="relative flex-1 bg-slate-200 overflow-hidden flex">
-        <div id="canvas-container" class="relative w-full h-full cursor-crosshair">
-            <canvas id="main-canvas" class="absolute inset-0 bg-white shadow-inner"></canvas>
-        </div>
-
-        <div id="layers-panel" class="hidden absolute right-4 top-4 bottom-4 w-64 bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col z-20">
-            <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-xl">
-                <span class="font-bold text-xs text-slate-700 uppercase tracking-wider">Layers</span>
-                <button onclick="addLayer()" class="p-1 text-slate-800 hover:bg-slate-200 rounded transition-all" title="Add Layer">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>
-            <div id="layers-list" class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar"></div>
-        </div>
-
-        <div id="selection-bar" class="hidden absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-2xl flex items-center space-x-4 z-30">
-            <span class="text-xs text-slate-300"><span id="selected-count">0</span> object(s) selected</span>
-            <div class="h-4 w-px bg-slate-700"></div>
-            <span class="text-xs text-slate-400 italic"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i>Drag selection to move</span>
-            <div class="h-4 w-px bg-slate-700"></div>
-            <button onclick="duplicateSelection()" class="text-xs hover:text-slate-300 flex items-center space-x-1">
-                <i class="fa-solid fa-copy"></i>
-                <span>Duplicate</span>
-            </button>
-            <button onclick="deleteSelection()" class="text-xs text-red-400 hover:text-red-300 flex items-center space-x-1">
-                <i class="fa-solid fa-trash"></i>
-                <span>Delete</span>
-            </button>
-        </div>
-    </div>
-
-    <div id="room-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-door-open text-emerald-600"></i>
-                    <span>Multiplayer Room Settings</span>
-                </h3>
-                <button onclick="closeRoomModal()" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <p class="text-xs text-slate-500 mb-4">Join an existing room code or create a new private room to draw together in real time.</p>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Room Name / ID</label>
-                    <input type="text" id="room-input" placeholder="e.g. vector-studio-1" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-slate-900 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Your Display Name</label>
-                    <input type="text" id="user-name-input" placeholder="Your Name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-slate-900 outline-none">
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 mt-6">
-                <button onclick="closeRoomModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
-                <button onclick="switchRoomFromModal()" class="px-4 py-2 text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-sm">Join Room</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast-container" class="fixed top-16 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vector-studio-app';
-        const firebaseConfig = {
-          apiKey: "AIzaSyALgIl-A-XbPOi4_yX6FnH4CAZNsMRauSg",
-          authDomain: "witboard-1c844.firebaseapp.com",
-          projectId: "witboard-1c844",
-          storageBucket: "witboard-1c844.firebasestorage.app",
-          messagingSenderId: "948928912969",
-          appId: "1:948928912969:web:ae43667f4b44e72d8a2998",
-          measurementId: "G-NE7TG6V6WD"
-        };
-
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // State definition
-        window.state = {
-            tool: 'brush', // 'brush', 'lasso', 'lassofill', 'pan'
-            brushColor: '#0f172a',
-            brushSize: 12,
-            velocityDynamics: true,
-            smoothing: true,
-            smoothingTolerance: 5,
-            zoom: 1,
-            panOffset: { x: 0, y: 0 },
-            isPanning: false,
-            panStart: { x: 0, y: 0 },
-            isDrawing: false,
-            isLassoing: false,
-            isLassoFilling: false,
-            isMovingSelection: false,
-            selectionDragStart: { x: 0, y: 0 },
-            currentPoints: [],
-            lassoPoints: [],
-            layers: [
-                { id: 'layer-1', name: 'Layer 1', visible: true, locked: false, elements: [] }
-            ],
-            activeLayerId: 'layer-1',
-            selectedElements: [],
-            undoStack: [],
-            redoStack: [],
-            
-            // Real-time Multiplayer state
-            currentRoomId: getRoomFromURL() || 'default-room',
-            userId: null,
-            userName: 'Artist ' + Math.floor(100 + Math.random() * 900),
-            userColor: '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'),
-            remoteCursors: {},
-            collaborators: {}
-        };
-
-        let lastCursorBroadcast = 0;
-
-        function getRoomFromURL() {
-            const hash = window.location.hash;
-            if (hash && hash.startsWith('#room=')) {
-                return decodeURIComponent(hash.substring(6));
-            }
-            return null;
-        }
-
-        // Initialize Authentication and Firestore Observers
-        async function initMultiplayer() {
-            try {
-                let userCred;
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    userCred = await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    userCred = await signInAnonymously(auth);
-                }
-
-                state.userId = userCred.user.uid;
-                updateRoomLabel();
-                subscribeToRoomElements();
-                subscribeToCursors();
-                showToast(`Connected to live room: ${state.currentRoomId}`, 'success');
-            } catch (err) {
-                console.error("Multiplayer setup error:", err);
-                showToast("Live sync error: operating in local fallback mode", "warning");
-            }
-        }
-
-        function getElementsCollectionPath() {
-            return collection(db, 'artifacts', appId, 'public', 'data', 'vector_elements');
-        }
-
-        function getCursorsCollectionPath() {
-            return collection(db, 'artifacts', appId, 'public', 'data', 'vector_cursors');
-        }
-
-        let unsubscribeElements = null;
-        function subscribeToRoomElements() {
-            if (unsubscribeElements) unsubscribeElements();
-
-            const colRef = getElementsCollectionPath();
-            unsubscribeElements = onSnapshot(colRef, (snapshot) => {
-                const roomElements = [];
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data && data.roomId === state.currentRoomId) {
-                        roomElements.push(data);
-                    }
-                });
-
-                roomElements.forEach(el => {
-                    if (el.type === 'image' && el.src && (!el.img || el.img.src !== el.src)) {
-                        const img = new Image();
-                        img.src = el.src;
-                        el.img = img;
-                    }
-                });
-
-                const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-                if (activeLayer) {
-                    activeLayer.elements = roomElements;
-                }
-                render();
-            }, (error) => {
-                console.error("Elements subscription error:", error);
-            });
-        }
-
-        let unsubscribeCursors = null;
-        function subscribeToCursors() {
-            if (unsubscribeCursors) unsubscribeCursors();
-
-            const cursorsRef = getCursorsCollectionPath();
-            unsubscribeCursors = onSnapshot(cursorsRef, (snapshot) => {
-                const now = Date.now();
-                const updatedCursors = {};
-                const activeCollaborators = {};
-
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data && data.roomId === state.currentRoomId && docSnap.id !== state.userId) {
-                        if (now - (data.lastSeen || 0) < 15000) {
-                            updatedCursors[docSnap.id] = data;
-                            activeCollaborators[docSnap.id] = {
-                                name: data.name,
-                                color: data.color
-                            };
-                        }
-                    }
-                });
-
-                state.remoteCursors = updatedCursors;
-                state.collaborators = activeCollaborators;
-                updateCollaboratorsUI();
-                render();
-            }, (error) => {
-                console.error("Cursors subscription error:", error);
-            });
-        }
-
-        window.broadcastCursorPosition = function(pt) {
-            if (!state.userId || !db) return;
-
-            const now = Date.now();
-            if (now - lastCursorBroadcast < 50) return;
-            lastCursorBroadcast = now;
-
-            const userCursorDoc = doc(db, 'artifacts', appId, 'public', 'data', 'vector_cursors', state.userId);
-            setDoc(userCursorDoc, {
-                x: pt.x,
-                y: pt.y,
-                name: state.userName,
-                color: state.userColor,
-                roomId: state.currentRoomId,
-                lastSeen: now
-            }, { merge: true }).catch(err => console.error("Cursor send error:", err));
-        };
-
-        window.addStorageElement = function(element) {
-            saveUndoState();
-            const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-            if (activeLayer) {
-                activeLayer.elements.push(element);
-            }
-
-            if (!state.userId || !db) return;
-
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'vector_elements', element.id);
-            const payload = {
-                ...element,
-                roomId: state.currentRoomId,
-                createdBy: state.userId,
-                creatorName: state.userName,
-                updatedAt: Date.now()
-            };
-
-            if (payload.type === 'image' && payload.img) {
-                payload.src = payload.img.src;
-                delete payload.img;
-            }
-
-            setDoc(docRef, payload).catch(err => console.error("Firestore save error:", err));
-        };
-
-        window.updateElementInFirestore = function(element) {
-            if (!state.userId || !db) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'vector_elements', element.id);
-            const payload = { ...element, roomId: state.currentRoomId, updatedAt: Date.now() };
-            if (payload.type === 'image' && payload.img) {
-                payload.src = payload.img.src;
-                delete payload.img;
-            }
-            setDoc(docRef, payload, { merge: true }).catch(err => console.error("Firestore update error:", err));
-        };
-
-        window.deleteElementFromFirestore = function(elementId) {
-            if (!state.userId || !db) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'vector_elements', elementId);
-            deleteDoc(docRef).catch(err => console.error("Firestore delete error:", err));
-        };
-
-        window.switchRoom = function(newRoomId) {
-            if (!newRoomId || newRoomId === state.currentRoomId) return;
-
-            state.currentRoomId = newRoomId;
-            window.location.hash = `room=${encodeURIComponent(newRoomId)}`;
-            updateRoomLabel();
-
-            const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-            if (activeLayer) activeLayer.elements = [];
-
-            subscribeToRoomElements();
-            subscribeToCursors();
-            showToast(`Switched to room: ${newRoomId}`, 'info');
-        };
-
-        window.initMultiplayer = initMultiplayer;
-    </script>
 
     <script>
-        const container = document.getElementById('canvas-container');
-        const canvas = document.getElementById('main-canvas');
+        let roomId = window.location.hash.replace('#room=', '');
+        if (!roomId) {
+            roomId = 'canvas_' + Math.random().toString(36).substring(2, 8);
+            window.location.hash = 'room=' + roomId;
+        }
+
+        let peerConnection = null;
+        let dataChannel = null;
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        
+        let signalingSocket = null;
+        try {
+            signalingSocket = new WebSocket('wss://free.rtc.sh/' + roomId);
+            signalingSocket.onopen = () => {
+                document.getElementById('status-text').textContent = 'Connecting...';
+                initializeWebRTC(true);
+            };
+            signalingSocket.onmessage = async (event) => {
+                const message = JSON.parse(event.data);
+                if (!peerConnection) initializeWebRTC(false);
+
+                if (message.sdp) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp));
+                    if (message.sdp.type === 'offer') {
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+                        signalingSocket.send(JSON.stringify({ sdp: peerConnection.localDescription }));
+                    }
+                } else if (message.candidate) {
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+                    } catch (e) {}
+                }
+            };
+        } catch(e) {}
+
+        function initializeWebRTC(isInitiator) {
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && signalingSocket && signalingSocket.readyState === WebSocket.OPEN) {
+                    signalingSocket.send(JSON.stringify({ candidate: event.candidate }));
+                }
+            };
+
+            if (isInitiator) {
+                dataChannel = peerConnection.createDataChannel('canvas-sync');
+                setupDataChannel();
+                peerConnection.createOffer().then(offer => {
+                    peerConnection.setLocalDescription(offer);
+                    if (signalingSocket && signalingSocket.readyState === WebSocket.OPEN) {
+                        signalingSocket.send(JSON.stringify({ sdp: peerConnection.localDescription }));
+                    }
+                });
+            } else {
+                peerConnection.ondatachannel = (event) => {
+                    dataChannel = event.channel;
+                    setupDataChannel();
+                };
+            }
+        }
+
+        function setupDataChannel() {
+            dataChannel.onopen = () => {
+                document.getElementById('status-dot').classList.add('connected');
+                document.getElementById('status-text').textContent = 'Connected (P2P)';
+                broadcastState();
+            };
+            dataChannel.onclose = () => {
+                document.getElementById('status-dot').classList.remove('connected');
+                document.getElementById('status-text').textContent = 'Disconnected';
+            };
+            dataChannel.onmessage = (e) => {
+                try {
+                    const incomingLayers = JSON.parse(e.data);
+                    layers = incomingLayers;
+                    ensureActiveLayerValid();
+                    renderLayersList();
+                    redraw();
+                } catch(err) {}
+            };
+        }
+
+        function broadcastState() {
+            if (dataChannel && dataChannel.readyState === 'open') {
+                dataChannel.send(JSON.stringify(layers));
+            }
+        }
+
+        document.getElementById('btn-share-room').addEventListener('click', () => {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Collaboration link copied to clipboard! Send this URL to your friend.');
+        });
+
+        let currentTool = 'brush';
+        let strokeColor = '#000000';
+        let brushSize = 4;
+        let flashSmoothingEnabled = true;
+        let smoothingStrength = 80;
+
+        let panX = 0, panY = 0, zoom = 1;
+        let isPanning = false, panStartX = 0, panStartY = 0;
+
+        let layers = [
+            { id: 'layer_1', name: 'Layer 1', visible: true, locked: false, elements: [] }
+        ];
+        let activeLayerId = 'layer_1';
+
+        let undoStack = [];
+        let redoStack = [];
+
+        let isDrawing = false;
+        let currentPathPoints = [];
+        let currentElement = null;
+
+        let lassoPoints = [];
+        let selectedElements = [];
+        let isDraggingSelection = false;
+        let lastDragWorldX = 0;
+        let lastDragWorldY = 0;
+
+        const canvas = document.getElementById('board');
         const ctx = canvas.getContext('2d');
+        const textOverlay = document.getElementById('text-overlay');
 
         function resizeCanvas() {
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            render();
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            redraw();
         }
-
         window.addEventListener('resize', resizeCanvas);
 
-        function processStrokePoints(rawPoints, baseSize, useVelocity, smoothingTol) {
-            if (!rawPoints || rawPoints.length === 0) return [];
-
-            const uniquePoints = [];
-            const minDistThreshold = state.smoothing ? Math.max(0.8, smoothingTol * 0.3) : 0.5;
-
-            for (let i = 0; i < rawPoints.length; i++) {
-                if (i === 0) {
-                    uniquePoints.push(rawPoints[i]);
-                } else {
-                    const prev = uniquePoints[uniquePoints.length - 1];
-                    const dist = Math.hypot(rawPoints[i].x - prev.x, rawPoints[i].y - prev.y);
-                    if (dist >= minDistThreshold) {
-                        uniquePoints.push(rawPoints[i]);
-                    }
-                }
-            }
-
-            if (uniquePoints.length <= 1) {
-                return [{
-                    x: uniquePoints[0].x,
-                    y: uniquePoints[0].y,
-                    w: baseSize / 2
-                }];
-            }
-
-            const interpolated = [];
-            for (let i = 0; i < uniquePoints.length - 1; i++) {
-                const p0 = uniquePoints[Math.max(0, i - 1)];
-                const p1 = uniquePoints[i];
-                const p2 = uniquePoints[i + 1];
-                const p3 = uniquePoints[Math.min(uniquePoints.length - 1, i + 2)];
-
-                const segmentDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                const steps = Math.max(2, Math.floor(segmentDist / 2.5));
-
-                for (let t = 0; t < steps; t++) {
-                    const factor = t / steps;
-                    const factor2 = factor * factor;
-                    const factor3 = factor2 * factor;
-
-                    const x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * factor + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * factor2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * factor3);
-                    const y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * factor + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * factor2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * factor3);
-                    const time = p1.time + (p2.time - p1.time) * factor;
-
-                    interpolated.push({ x, y, time });
-                }
-            }
-            interpolated.push(uniquePoints[uniquePoints.length - 1]);
-
-            const minSize = Math.max(1, baseSize * 0.15);
-            const maxSize = baseSize / 2;
-
-            let totalDist = 0;
-            let totalTime = 0;
-            const windowSize = Math.min(interpolated.length, 6);
-            for (let i = 1; i < windowSize; i++) {
-                totalDist += Math.hypot(interpolated[i].x - interpolated[i-1].x, interpolated[i].y - interpolated[i-1].y);
-                totalTime += Math.max(1, interpolated[i].time - interpolated[i-1].time);
-            }
-            const initialVel = totalTime > 0 ? (totalDist / totalTime) : 0.5;
-
-            const widths = [];
-            let currentWidth = maxSize;
-
-            for (let i = 0; i < interpolated.length; i++) {
-                let targetW = maxSize;
-
-                if (useVelocity) {
-                    let v = initialVel;
-                    if (i > 0) {
-                        const dist = Math.hypot(interpolated[i].x - interpolated[i-1].x, interpolated[i].y - interpolated[i-1].y);
-                        const dt = Math.max(1, interpolated[i].time - interpolated[i-1].time);
-                        v = dist / dt;
-                    }
-
-                    const normalizedV = Math.min(Math.max(v, 0.05), 3.0);
-                    const factor = 1 - (normalizedV / 3.0);
-                    targetW = minSize + (maxSize - minSize) * (factor * 0.85 + 0.15);
-                }
-
-                if (i === 0) {
-                    currentWidth = targetW;
-                } else {
-                    currentWidth = currentWidth + (targetW - currentWidth) * 0.25;
-                }
-
-                widths.push(currentWidth);
-            }
-
-            const totalCount = interpolated.length;
-            const taperWindow = Math.min(Math.floor(totalCount / 2), 10);
-
-            for (let i = 0; i < taperWindow; i++) {
-                const ratio = (i + 1) / (taperWindow + 1);
-                widths[i] = Math.min(widths[i], widths[i] * ratio + minSize * (1 - ratio));
-                widths[totalCount - 1 - i] = Math.min(widths[totalCount - 1 - i], widths[totalCount - 1 - i] * ratio + minSize * (1 - ratio));
-            }
-
-            return interpolated.map((pt, i) => ({
-                x: pt.x,
-                y: pt.y,
-                w: widths[i]
-            }));
+        function screenToWorld(screenX, screenY) {
+            const wx = (screenX - panX - canvas.width / 2) / zoom + canvas.width / 2;
+            const wy = (screenY - panY - canvas.height / 2) / zoom + canvas.height / 2;
+            return { x: wx, y: wy };
         }
 
-        function drawTaperedStroke(context, points, color) {
-            if (!points || points.length === 0) return;
-
-            context.save();
-            context.fillStyle = color;
-            context.strokeStyle = color;
-
-            if (points.length === 1) {
-                context.beginPath();
-                context.arc(points[0].x, points[0].y, Math.max(0.5, points[0].w), 0, Math.PI * 2);
-                context.fill();
-                context.restore();
-                return;
-            }
-
-            for (let i = 0; i < points.length - 1; i++) {
-                const p1 = points[i];
-                const p2 = points[i + 1];
-                const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                const r1 = Math.max(0.5, p1.w);
-                const r2 = Math.max(0.5, p2.w);
-
-                context.beginPath();
-                if (dist < 0.5) {
-                    context.arc(p1.x, p1.y, r1, 0, Math.PI * 2);
-                    context.fill();
-                } else {
-                    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-                    const nx = Math.cos(angle + Math.PI / 2);
-                    const ny = Math.sin(angle + Math.PI / 2);
-
-                    context.moveTo(p1.x + nx * r1, p1.y + ny * r1);
-                    context.lineTo(p2.x + nx * r2, p2.y + ny * r2);
-                    context.arc(p2.x, p2.y, r2, angle + Math.PI / 2, angle - Math.PI / 2, true);
-                    context.lineTo(p1.x - nx * r1, p1.y - ny * r1);
-                    context.arc(p1.x, p1.y, r1, angle - Math.PI / 2, angle + Math.PI / 2, true);
-                    context.closePath();
-                    context.fill();
+        function simplifyAndSmoothPath(points, smoothness) {
+            if (points.length < 3) return points;
+            let weighted = [];
+            for (let i = 0; i < points.length; i++) {
+                let p = points[i];
+                let w = p.w;
+                if (smoothness > 0 && i > 0 && i < points.length - 1) {
+                    let prev = points[i-1];
+                    let next = points[i+1];
+                    let dist = Math.hypot(next.x - prev.x, next.y - prev.y);
+                    let factor = Math.min(1, dist / 20);
+                    w = p.w * (1 - (smoothness / 100) * 0.3 * (1 - factor));
                 }
-            }
-            context.restore();
-        }
-
-        function drawLassoFilledShape(context, points, color) {
-            if (!points || points.length < 3) return;
-            context.save();
-            context.fillStyle = color;
-            context.beginPath();
-            context.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
-                context.lineTo(points[i].x, points[i].y);
-            }
-            context.closePath();
-            context.fill();
-            context.restore();
-        }
-
-        function getElementBoundingBox(el) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-            if (el.type === 'stroke' && el.processedPoints) {
-                el.processedPoints.forEach(pt => {
-                    minX = Math.min(minX, pt.x - pt.w);
-                    minY = Math.min(minY, pt.y - pt.w);
-                    maxX = Math.max(maxX, pt.x + pt.w);
-                    maxY = Math.max(maxY, pt.y + pt.w);
-                });
-            } else if (el.type === 'lassofill' && el.points) {
-                el.points.forEach(pt => {
-                    minX = Math.min(minX, pt.x);
-                    minY = Math.min(minY, pt.y);
-                    maxX = Math.max(maxX, pt.x);
-                    maxY = Math.max(maxY, pt.y);
-                });
-            } else if (el.type === 'image') {
-                minX = el.x;
-                minY = el.y;
-                maxX = el.x + el.width;
-                maxY = el.y + el.height;
+                weighted.push({ x: p.x, y: p.y, w: Math.max(0.5, w) });
             }
 
-            if (minX === Infinity) return null;
-            return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
-        }
-
-        function getCombinedSelectionBounds() {
-            if (state.selectedElements.length === 0) return null;
-
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-            if (!activeLayer) return null;
-
-            state.selectedElements.forEach(id => {
-                const el = activeLayer.elements.find(item => item.id === id);
-                if (el) {
-                    const box = getElementBoundingBox(el);
-                    if (box) {
-                        minX = Math.min(minX, box.minX);
-                        minY = Math.min(minY, box.minY);
-                        maxX = Math.max(maxX, box.maxX);
-                        maxY = Math.max(maxY, box.maxY);
-                    }
+            let smoothed = [...weighted];
+            let iterations = Math.round((smoothness / 100) * 2);
+            for (let iter = 0; iter < iterations; iter++) {
+                let nextIter = [];
+                nextIter.push(smoothed[0]);
+                for (let i = 0; i < smoothed.length - 1; i++) {
+                    let p0 = smoothed[i];
+                    let p1 = smoothed[i+1];
+                    let Q = { x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y, w: 0.75 * p0.w + 0.25 * p1.w };
+                    let R = { x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y, w: 0.25 * p0.w + 0.75 * p1.w };
+                    nextIter.push(Q);
+                    nextIter.push(R);
                 }
-            });
-
-            if (minX === Infinity) return null;
-            return { x: minX - 6, y: minY - 6, width: maxX - minX + 12, height: maxY - minY + 12 };
+                nextIter.push(smoothed[smoothed.length - 1]);
+                smoothed = nextIter;
+            }
+            return smoothed;
         }
 
-        function render() {
+        function redraw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             ctx.save();
-            ctx.translate(state.panOffset.x, state.panOffset.y);
-            ctx.scale(state.zoom, state.zoom);
+            ctx.translate(canvas.width / 2 + panX, canvas.height / 2 + panY);
+            ctx.scale(zoom, zoom);
+            ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
-            [...state.layers].reverse().forEach(layer => {
+            layers.forEach(layer => {
                 if (!layer.visible) return;
-
                 layer.elements.forEach(el => {
-                    const isSelected = state.selectedElements.includes(el.id);
-
-                    if (el.type === 'stroke') {
-                        drawTaperedStroke(ctx, el.processedPoints, el.color);
-                    } else if (el.type === 'lassofill') {
-                        drawLassoFilledShape(ctx, el.points, el.color);
-                    } else if (el.type === 'image') {
-                        ctx.save();
-                        if (el.img && el.img.complete) {
-                            ctx.drawImage(el.img, el.x, el.y, el.width, el.height);
-                        }
-                        ctx.restore();
-                    }
-
-                    if (isSelected) {
-                        const box = getElementBoundingBox(el);
-                        if (box) {
-                            ctx.save();
-                            ctx.strokeStyle = '#0f172a';
-                            ctx.lineWidth = 1.5 / state.zoom;
-                            ctx.setLineDash([4 / state.zoom, 4 / state.zoom]);
-                            ctx.strokeRect(box.minX - 2, box.minY - 2, box.width + 4, box.height + 4);
-                            ctx.restore();
-                        }
-                    }
+                    renderElement(ctx, el);
                 });
             });
 
-            // Live local stroke preview
-            if (state.isDrawing && state.currentPoints.length > 0) {
-                const liveProcessed = processStrokePoints(
-                    state.currentPoints,
-                    state.brushSize,
-                    state.velocityDynamics,
-                    state.smoothingTolerance
-                );
-                drawTaperedStroke(ctx, liveProcessed, state.brushColor);
+            if (isDrawing && currentElement) {
+                renderElement(ctx, currentElement);
             }
 
-            if (state.isLassoing && state.lassoPoints.length > 1) {
+            if (lassoPoints.length > 0) {
                 ctx.save();
-                ctx.strokeStyle = '#0f172a';
-                ctx.lineWidth = 1.5 / state.zoom;
-                ctx.setLineDash([6 / state.zoom, 6 / state.zoom]);
                 ctx.beginPath();
-                state.lassoPoints.forEach((pt, idx) => {
-                    if (idx === 0) ctx.moveTo(pt.x, pt.y);
-                    else ctx.lineTo(pt.x, pt.y);
-                });
-                ctx.closePath();
+                ctx.strokeStyle = '#0066FF';
+                ctx.lineWidth = 1.5 / zoom;
+                ctx.setLineDash([4 / zoom, 4 / zoom]);
+                ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+                for (let i = 1; i < lassoPoints.length; i++) {
+                    ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+                }
+                if (currentTool === 'lasso-fill') {
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(0, 102, 255, 0.1)';
+                    ctx.fill();
+                }
                 ctx.stroke();
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.08)';
-                ctx.fill();
                 ctx.restore();
             }
 
-            if (state.isLassoFilling && state.lassoPoints.length > 1) {
-                ctx.save();
-                ctx.strokeStyle = state.brushColor;
-                ctx.lineWidth = 1.5 / state.zoom;
-                ctx.beginPath();
-                state.lassoPoints.forEach((pt, idx) => {
-                    if (idx === 0) ctx.moveTo(pt.x, pt.y);
-                    else ctx.lineTo(pt.x, pt.y);
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(item => {
+                    const bounds = getElementBounds(item.el);
+                    if (bounds) {
+                        ctx.save();
+                        ctx.strokeStyle = '#0066FF';
+                        ctx.lineWidth = 1.5 / zoom;
+                        ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+                        ctx.restore();
+                    }
                 });
-                ctx.closePath();
-                ctx.stroke();
-                ctx.fillStyle = state.brushColor;
-                ctx.globalAlpha = 0.3;
-                ctx.fill();
-                ctx.restore();
             }
-
-            const selectionBox = getCombinedSelectionBounds();
-            if (selectionBox) {
-                ctx.save();
-                ctx.strokeStyle = '#0f172a';
-                ctx.lineWidth = 2 / state.zoom;
-                ctx.strokeRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
-                
-                ctx.fillStyle = '#ffffff';
-                const handleSize = 8 / state.zoom;
-                [
-                    { x: selectionBox.x, y: selectionBox.y },
-                    { x: selectionBox.x + selectionBox.width, y: selectionBox.y },
-                    { x: selectionBox.x, y: selectionBox.y + selectionBox.height },
-                    { x: selectionBox.x + selectionBox.width, y: selectionBox.y + selectionBox.height }
-                ].forEach(h => {
-                    ctx.fillRect(h.x - handleSize / 2, h.y - handleSize / 2, handleSize, handleSize);
-                    ctx.strokeRect(h.x - handleSize / 2, h.y - handleSize / 2, handleSize, handleSize);
-                });
-
-                ctx.restore();
-            }
-
-            drawRemoteCursors(ctx);
 
             ctx.restore();
         }
 
-        function drawRemoteCursors(context) {
-            if (!state.remoteCursors) return;
+        function renderElement(context, el) {
+            context.save();
+            if (el.type === 'brush' || el.type === 'eraser') {
+                if (!el.points || el.points.length === 0) return;
+                context.strokeStyle = el.color;
+                context.lineCap = 'round';
+                context.lineJoin = 'round';
+                if (el.type === 'eraser') {
+                    context.globalCompositeOperation = 'destination-out';
+                }
 
-            Object.keys(state.remoteCursors).forEach(uid => {
-                const c = state.remoteCursors[uid];
-                if (c && typeof c.x === 'number' && typeof c.y === 'number') {
-                    context.save();
-                    context.translate(c.x, c.y);
-
-                    const scale = 1 / Math.max(0.5, state.zoom);
-                    context.scale(scale, scale);
-
-                    context.fillStyle = c.color || '#3b82f6';
-                    context.strokeStyle = '#ffffff';
-                    context.lineWidth = 1.5;
-
+                for (let i = 0; i < el.points.length - 1; i++) {
+                    let p1 = el.points[i];
+                    let p2 = el.points[i+1];
                     context.beginPath();
-                    context.moveTo(0, 0);
-                    context.lineTo(0, 16);
-                    context.lineTo(4, 12);
-                    context.lineTo(9, 18);
-                    context.lineTo(12, 16);
-                    context.lineTo(7, 10);
-                    context.lineTo(14, 10);
-                    context.closePath();
-                    context.fill();
+                    context.moveTo(p1.x, p1.y);
+                    context.lineTo(p2.x, p2.y);
+                    context.lineWidth = (p1.w + p2.w) / 2;
                     context.stroke();
-                    context.fillStyle = c.color || '#3b82f6';
-                    context.font = 'bold 11px Inter, sans-serif';
-                    const textWidth = context.measureText(c.name || 'Artist').width;
+                }
+            } else if (el.type === 'rect') {
+                context.strokeStyle = el.color;
+                context.lineWidth = el.size;
+                context.strokeRect(el.x, el.y, el.w, el.h);
+            } else if (el.type === 'circle') {
+                context.beginPath();
+                let rx = Math.abs(el.w / 2);
+                let ry = Math.abs(el.h / 2);
+                let cx = el.x + el.w / 2;
+                let cy = el.y + el.h / 2;
+                context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                context.strokeStyle = el.color;
+                context.lineWidth = el.size;
+                context.stroke();
+            } else if (el.type === 'line') {
+                context.beginPath();
+                context.moveTo(el.x1, el.y1);
+                context.lineTo(el.x2, el.y2);
+                context.strokeStyle = el.color;
+                context.lineWidth = el.size;
+                context.lineCap = 'round';
+                context.stroke();
+            } else if (el.type === 'text') {
+                context.fillStyle = el.color;
+                context.font = `${Math.max(12, el.size * 4)}px sans-serif`;
+                context.fillText(el.text, el.x, el.y);
+            } else if (el.type === 'lasso-fill') {
+                if (!el.points || el.points.length < 3) return;
+                context.beginPath();
+                context.moveTo(el.points[0].x, el.points[0].y);
+                for (let i = 1; i < el.points.length; i++) {
+                    context.lineTo(el.points[i].x, el.points[i].y);
+                }
+                context.closePath();
+                context.fillStyle = el.color;
+                context.fill();
+                context.strokeStyle = el.color;
+                context.lineWidth = el.size;
+                context.stroke();
+            }
+            context.restore();
+        }
 
-                    context.beginPath();
-                    context.roundRect(14, 12, textWidth + 12, 20, 6);
-                    context.fill();
+        function getElementBounds(el) {
+            if (el.type === 'brush' || el.type === 'eraser' || el.type === 'lasso-fill') {
+                if (!el.points || el.points.length === 0) return null;
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                el.points.forEach(p => {
+                    minX = Math.min(minX, p.x);
+                    minY = Math.min(minY, p.y);
+                    maxX = Math.max(maxX, p.x);
+                    maxY = Math.max(maxY, p.y);
+                });
+                return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+            } else if (el.type === 'rect' || el.type === 'text') {
+                return { x: el.x, y: el.y, width: el.w || 100, height: el.h || 24 };
+            } else if (el.type === 'circle') {
+                return { x: el.x, y: el.y, width: el.w, height: el.h };
+            } else if (el.type === 'line') {
+                return {
+                    x: Math.min(el.x1, el.x2),
+                    y: Math.min(el.y1, el.y2),
+                    width: Math.abs(el.x2 - el.x1),
+                    height: Math.abs(el.y2 - el.y1)
+                };
+            }
+            return null;
+        }
 
-                    context.fillStyle = '#ffffff';
-                    context.fillText(c.name || 'Artist', 20, 26);
+        function translateElement(el, dx, dy) {
+            if (el.type === 'brush' || el.type === 'eraser' || el.type === 'lasso-fill') {
+                if (el.points) {
+                    el.points.forEach(p => { p.x += dx; p.y += dy; });
+                }
+            } else if (el.type === 'rect' || el.type === 'text') {
+                el.x += dx;
+                el.y += dy;
+            } else if (el.type === 'circle') {
+                el.x += dx;
+                el.y += dy;
+            } else if (el.type === 'line') {
+                el.x1 += dx;
+                el.y1 += dy;
+                el.x2 += dx;
+                el.y2 += dy;
+            }
+        }
 
-                    context.restore();
+        function saveStateToUndo() {
+            undoStack.push(JSON.parse(JSON.stringify(layers)));
+            if (undoStack.length > 50) undoStack.shift();
+            redoStack = [];
+        }
+
+        const tools = document.querySelectorAll('[data-tool]');
+        tools.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tools.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.getAttribute('data-tool');
+                if (currentTool !== 'lasso-select') {
+                    selectedElements = [];
+                    redraw();
                 }
             });
-        }
+        });
 
-        function getCanvasCoords(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0].clientY);
+        document.getElementById('stroke-color').addEventListener('input', (e) => { strokeColor = e.target.value; });
+        document.getElementById('brush-size').addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+            document.getElementById('size-val').textContent = brushSize;
+        });
 
-            return {
-                x: (clientX - rect.left - state.panOffset.x) / state.zoom,
-                y: (clientY - rect.top - state.panOffset.y) / state.zoom,
-                time: Date.now()
-            };
-        }
-
-        function isPointInBox(pt, box) {
-            if (!box) return false;
-            return pt.x >= box.x && pt.x <= box.x + box.width && pt.y >= box.y && pt.y <= box.y + box.height;
-        }
+        document.getElementById('smoothing-toggle').addEventListener('change', (e) => { flashSmoothingEnabled = e.target.checked; });
+        document.getElementById('smoothing-slider').addEventListener('input', (e) => {
+            smoothingStrength = parseInt(e.target.value);
+            document.getElementById('smooth-val').textContent = smoothingStrength;
+        });
 
         canvas.addEventListener('pointerdown', (e) => {
-            if (e.button === 1 || state.tool === 'pan' || e.spaceKey) {
-                state.isPanning = true;
-                state.panStart = { x: e.clientX - state.panOffset.x, y: e.clientY - state.panOffset.y };
-                canvas.style.cursor = 'grabbing';
+            if (currentTool === 'pan' || e.button === 1 || e.spaceKey) {
+                isPanning = true;
+                panStartX = e.clientX - panX;
+                panStartY = e.clientY - panY;
                 return;
             }
 
-            const pt = getCanvasCoords(e);
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (!activeLayer || !activeLayer.visible || activeLayer.locked) return;
 
-            if (state.tool === 'lasso') {
-                const selectionBox = getCombinedSelectionBounds();
-                if (selectionBox && isPointInBox(pt, selectionBox)) {
-                    state.isMovingSelection = true;
-                    state.selectionDragStart = pt;
-                    saveUndoState();
-                    canvas.style.cursor = 'move';
-                    return;
-                } else {
-                    state.selectedElements = [];
-                    updateSelectionBar();
-                    state.isLassoing = true;
-                    state.lassoPoints = [pt];
-                    render();
-                    return;
-                }
-            }
+            const pos = screenToWorld(e.clientX, e.clientY);
 
-            if (state.tool === 'brush') {
-                state.isDrawing = true;
-                state.currentPoints = [pt];
-                render();
-            } else if (state.tool === 'lassofill') {
-                state.isLassoFilling = true;
-                state.lassoPoints = [pt];
-                render();
-            }
-        });
-
-        canvas.addEventListener('pointermove', (e) => {
-            if (state.isPanning) {
-                state.panOffset.x = e.clientX - state.panStart.x;
-                state.panOffset.y = e.clientY - state.panStart.y;
-                render();
-                return;
-            }
-
-            const pt = getCanvasCoords(e);
-
-            // Broadcast cursor to room
-            if (window.broadcastCursorPosition) {
-                window.broadcastCursorPosition(pt);
-            }
-
-            if (state.tool === 'lasso' && !state.isLassoing && !state.isMovingSelection) {
-                const selectionBox = getCombinedSelectionBounds();
-                if (selectionBox && isPointInBox(pt, selectionBox)) {
-                    canvas.style.cursor = 'move';
-                } else {
-                    canvas.style.cursor = 'crosshair';
-                }
-            }
-
-            if (state.isMovingSelection) {
-                const dx = pt.x - state.selectionDragStart.x;
-                const dy = pt.y - state.selectionDragStart.y;
-                state.selectionDragStart = pt;
-
-                const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-                if (activeLayer) {
-                    state.selectedElements.forEach(id => {
-                        const el = activeLayer.elements.find(item => item.id === id);
-                        if (el) {
-                            if (el.type === 'stroke' && el.processedPoints) {
-                                el.processedPoints.forEach(p => { p.x += dx; p.y += dy; });
-                            } else if (el.type === 'lassofill' && el.points) {
-                                el.points.forEach(p => { p.x += dx; p.y += dy; });
-                            } else if (el.type === 'image') {
-                                el.x += dx;
-                                el.y += dy;
-                            }
-                            if (window.updateElementInFirestore) {
-                                window.updateElementInFirestore(el);
-                            }
-                        }
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                isDrawing = true;
+                currentPathPoints = [{ x: pos.x, y: pos.y, w: brushSize }];
+                currentElement = {
+                    type: currentTool,
+                    color: strokeColor,
+                    size: brushSize,
+                    points: currentPathPoints
+                };
+            } else if (currentTool === 'rect' || currentTool === 'circle') {
+                isDrawing = true;
+                currentElement = {
+                    type: currentTool,
+                    color: strokeColor,
+                    size: brushSize,
+                    x: pos.x,
+                    y: pos.y,
+                    w: 0,
+                    h: 0
+                };
+            } else if (currentTool === 'line') {
+                isDrawing = true;
+                currentElement = {
+                    type: currentTool,
+                    color: strokeColor,
+                    size: brushSize,
+                    x1: pos.x,
+                    y1: pos.y,
+                    x2: pos.x,
+                    y2: pos.y
+                };
+            } else if (currentTool === 'lasso-fill') {
+                isDrawing = true;
+                lassoPoints.push({ x: pos.x, y: pos.y });
+            } else if (currentTool === 'lasso-select') {
+                let clickedInsideSelection = false;
+                if (selectedElements.length > 0) {
+                    clickedInsideSelection = selectedElements.some(item => {
+                        const b = getElementBounds(item.el);
+                        return b && pos.x >= b.x && pos.x <= b.x + b.width && pos.y >= b.y && pos.y <= b.y + b.height;
                     });
                 }
-                render();
-                return;
-            }
 
-            if (state.isDrawing) {
-                if (state.smoothing && state.currentPoints.length > 0) {
-                    const lastPt = state.currentPoints[state.currentPoints.length - 1];
-                    const dist = Math.hypot(pt.x - lastPt.x, pt.y - lastPt.y);
-                    if (dist < 1.5) return;
+                if (clickedInsideSelection) {
+                    isDraggingSelection = true;
+                    lastDragWorldX = pos.x;
+                    lastDragWorldY = pos.y;
+                    saveStateToUndo();
+                } else {
+                    isDrawing = true;
+                    lassoPoints = [{ x: pos.x, y: pos.y }];
                 }
-                state.currentPoints.push(pt);
-                render();
-            } else if (state.isLassoing || state.isLassoFilling) {
-                state.lassoPoints.push(pt);
-                render();
+            } else if (currentTool === 'text') {
+                openTextInput(e.clientX, e.clientY, pos.x, pos.y);
             }
         });
 
-        canvas.addEventListener('pointerup', () => {
-            if (state.isPanning) {
-                state.isPanning = false;
-                canvas.style.cursor = state.tool === 'pan' ? 'grab' : 'crosshair';
+        window.addEventListener('pointermove', (e) => {
+            if (isPanning) {
+                panX = e.clientX - panStartX;
+                panY = e.clientY - panStartY;
+                redraw();
                 return;
             }
 
-            if (state.isMovingSelection) {
-                state.isMovingSelection = false;
-                canvas.style.cursor = state.tool === 'lasso' ? 'move' : 'crosshair';
-                render();
+            const pos = screenToWorld(e.clientX, e.clientY);
+
+            if (isDraggingSelection) {
+                const dx = pos.x - lastDragWorldX;
+                const dy = pos.y - lastDragWorldY;
+                selectedElements.forEach(item => {
+                    translateElement(item.el, dx, dy);
+                });
+                lastDragWorldX = pos.x;
+                lastDragWorldY = pos.y;
+                redraw();
                 return;
             }
 
-            if (state.isDrawing) {
-                state.isDrawing = false;
-                if (state.currentPoints.length > 0) {
-                    const processed = processStrokePoints(
-                        state.currentPoints,
-                        state.brushSize,
-                        state.velocityDynamics,
-                        state.smoothingTolerance
-                    );
+            if (!isDrawing) return;
 
-                    const newStroke = {
-                        id: 'stroke-' + Date.now() + Math.random().toString(36).substr(2, 4),
-                        type: 'stroke',
-                        color: state.brushColor,
-                        size: state.brushSize,
-                        processedPoints: processed
-                    };
-
-                    if (window.addStorageElement) {
-                        window.addStorageElement(newStroke);
-                    }
-                }
-                state.currentPoints = [];
-                render();
-            } else if (state.isLassoing) {
-                state.isLassoing = false;
-                evaluateLassoSelection();
-                state.lassoPoints = [];
-                render();
-            } else if (state.isLassoFilling) {
-                state.isLassoFilling = false;
-                if (state.lassoPoints.length >= 3) {
-                    const fillElement = {
-                        id: 'fill-' + Date.now() + Math.random().toString(36).substr(2, 4),
-                        type: 'lassofill',
-                        color: state.brushColor,
-                        points: [...state.lassoPoints]
-                    };
-                    if (window.addStorageElement) {
-                        window.addStorageElement(fillElement);
-                    }
-                }
-                state.lassoPoints = [];
-                render();
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                currentPathPoints.push({ x: pos.x, y: pos.y, w: brushSize });
+            } else if (currentTool === 'rect' || currentTool === 'circle') {
+                currentElement.w = pos.x - currentElement.x;
+                currentElement.h = pos.y - currentElement.y;
+            } else if (currentTool === 'line') {
+                currentElement.x2 = pos.x;
+                currentElement.y2 = pos.y;
+            } else if (currentTool === 'lasso-fill' || currentTool === 'lasso-select') {
+                lassoPoints.push({ x: pos.x, y: pos.y });
             }
+            redraw();
         });
 
-        function pointInPolygon(point, vs) {
-            let x = point.x, y = point.y;
-            let inside = false;
-            for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-                let xi = vs[i].x, yi = vs[i].y;
-                let xj = vs[j].x, yj = vs[j].y;
-                let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-                if (intersect) inside = !inside;
+        window.addEventListener('pointerup', (e) => {
+            if (isPanning) {
+                isPanning = false;
+                return;
             }
-            return inside;
-        }
 
-        function evaluateLassoSelection() {
-            if (state.lassoPoints.length < 3) return;
-
-            const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-            if (!activeLayer) return;
-
-            const selected = [];
-
-            activeLayer.elements.forEach(el => {
-                if (el.type === 'stroke' && el.processedPoints) {
-                    const hit = el.processedPoints.some(pt => pointInPolygon(pt, state.lassoPoints));
-                    if (hit) selected.push(el.id);
-                } else if (el.type === 'lassofill' && el.points) {
-                    const hit = el.points.some(pt => pointInPolygon(pt, state.lassoPoints));
-                    if (hit) selected.push(el.id);
-                } else if (el.type === 'image') {
-                    const center = { x: el.x + el.width / 2, y: el.y + el.height / 2 };
-                    if (pointInPolygon(center, state.lassoPoints)) selected.push(el.id);
-                }
-            });
-
-            state.selectedElements = selected;
-            updateSelectionBar();
-        }
-
-        function updateSelectionBar() {
-            const bar = document.getElementById('selection-bar');
-            const countSpan = document.getElementById('selected-count');
-            if (state.selectedElements.length > 0) {
-                countSpan.innerText = state.selectedElements.length;
-                bar.classList.remove('hidden');
-            } else {
-                bar.classList.add('hidden');
+            if (isDraggingSelection) {
+                isDraggingSelection = false;
+                broadcastState();
+                return;
             }
-        }
 
-        function duplicateSelection() {
-            if (state.selectedElements.length === 0) return;
-            saveUndoState();
+            if (!isDrawing) return;
+            isDrawing = false;
 
-            const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-            const newSelections = [];
+            const activeLayer = layers.find(l => l.id === activeLayerId);
 
-            state.selectedElements.forEach(id => {
-                const el = activeLayer.elements.find(item => item.id === id);
-                if (el) {
-                    if (el.type === 'stroke') {
-                        const dup = JSON.parse(JSON.stringify(el));
-                        dup.id = 'stroke-' + Date.now() + Math.random().toString(36).substr(2, 4);
-                        dup.processedPoints = dup.processedPoints.map(p => ({ ...p, x: p.x + 20, y: p.y + 20 }));
-                        if (window.addStorageElement) window.addStorageElement(dup);
-                        newSelections.push(dup.id);
-                    } else if (el.type === 'lassofill') {
-                        const dup = JSON.parse(JSON.stringify(el));
-                        dup.id = 'fill-' + Date.now() + Math.random().toString(36).substr(2, 4);
-                        dup.points = dup.points.map(p => ({ x: p.x + 20, y: p.y + 20 }));
-                        if (window.addStorageElement) window.addStorageElement(dup);
-                        newSelections.push(dup.id);
-                    } else if (el.type === 'image') {
-                        const dup = { ...el, id: 'img-' + Date.now(), x: el.x + 20, y: el.y + 20 };
-                        if (window.addStorageElement) window.addStorageElement(dup);
-                        newSelections.push(dup.id);
-                    }
+            if ((currentTool === 'brush' || currentTool === 'eraser') && currentElement) {
+                if (flashSmoothingEnabled && currentTool === 'brush' && currentElement.points.length > 2) {
+                    currentElement.points = simplifyAndSmoothPath(currentElement.points, smoothingStrength);
                 }
-            });
-
-            state.selectedElements = newSelections;
-            updateSelectionBar();
-            render();
-        }
-
-        function deleteSelection() {
-            if (state.selectedElements.length === 0) return;
-            saveUndoState();
-
-            const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
-            state.selectedElements.forEach(id => {
-                if (window.deleteElementFromFirestore) {
-                    window.deleteElementFromFirestore(id);
+                saveStateToUndo();
+                activeLayer.elements.push(currentElement);
+                currentElement = null;
+                broadcastState();
+            } else if ((currentTool === 'rect' || currentTool === 'circle' || currentTool === 'line') && currentElement) {
+                if (Math.abs(currentElement.w || (currentElement.x2 - currentElement.x1)) > 2) {
+                    saveStateToUndo();
+                    activeLayer.elements.push(currentElement);
+                    broadcastState();
                 }
-            });
-
-            activeLayer.elements = activeLayer.elements.filter(el => !state.selectedElements.includes(el.id));
-            state.selectedElements = [];
-            updateSelectionBar();
-            render();
-        }
-
-        function saveUndoState() {
-            state.undoStack.push(JSON.stringify(state.layers));
-            state.redoStack = [];
-        }
-
-        function undo() {
-            if (state.undoStack.length === 0) return;
-            state.redoStack.push(JSON.stringify(state.layers));
-            state.layers = JSON.parse(state.undoStack.pop());
-            state.selectedElements = [];
-            updateSelectionBar();
-            render();
-            updateLayersList();
-        }
-
-        function redo() {
-            if (state.redoStack.length === 0) return;
-            state.undoStack.push(JSON.stringify(state.layers));
-            state.layers = JSON.parse(state.redoStack.pop());
-            state.selectedElements = [];
-            updateSelectionBar();
-            render();
-            updateLayersList();
-        }
-
-        function setTool(toolName) {
-            state.tool = toolName;
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.classList.remove('bg-slate-900', 'text-white', 'shadow-sm');
-                btn.classList.add('text-slate-600');
-            });
-            const activeBtn = document.getElementById(`tool-${toolName}`);
-            if (activeBtn) {
-                activeBtn.classList.add('bg-slate-900', 'text-white', 'shadow-sm');
-                activeBtn.classList.remove('text-slate-600');
+                currentElement = null;
+            } else if (currentTool === 'lasso-fill') {
+                if (lassoPoints.length >= 3) {
+                    saveStateToUndo();
+                    activeLayer.elements.push({
+                        type: 'lasso-fill',
+                        color: strokeColor,
+                        size: brushSize,
+                        points: [...lassoPoints]
+                    });
+                    broadcastState();
+                }
+                lassoPoints = [];
+            } else if (currentTool === 'lasso-select') {
+                selectedElements = [];
+                layers.forEach(layer => {
+                    if (!layer.visible) return;
+                    layer.elements.forEach(el => {
+                        const bounds = getElementBounds(el);
+                        if (bounds && lassoPoints.some(p => p.x >= bounds.x && p.x <= bounds.x + bounds.width && p.y >= bounds.y && p.y <= bounds.y + bounds.height)) {
+                            selectedElements.push({ el: el, layerId: layer.id });
+                        }
+                    });
+                });
+                lassoPoints = [];
             }
-            canvas.style.cursor = toolName === 'pan' ? 'grab' : 'crosshair';
-        }
-
-        function updateBrushColor(color) {
-            state.brushColor = color;
-        }
-
-        function setQuickColor(color) {
-            state.brushColor = color;
-            document.getElementById('color-picker').value = color;
-        }
-
-        function updateBrushSize(size) {
-            state.brushSize = parseInt(size, 10);
-            document.getElementById('size-val').innerText = `${size}px`;
-        }
-
-        function toggleVelocityDynamics(enabled) {
-            state.velocityDynamics = enabled;
-        }
-
-        function toggleSmoothing(enabled) {
-            state.smoothing = enabled;
-        }
-
-        function updateSmoothingLevel(val) {
-            state.smoothingTolerance = parseInt(val, 10);
-            document.getElementById('smoothing-val').innerText = `${val}px`;
-        }
+            redraw();
+        });
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-            const newZoom = Math.min(Math.max(state.zoom * zoomFactor, 0.2), 5);
+            const zoomFactor = 1.1;
+            const oldZoom = zoom;
+            if (e.deltaY < 0) {
+                zoom = Math.min(10, zoom * zoomFactor);
+            } else {
+                zoom = Math.max(0.1, zoom / zoomFactor);
+            }
+            panX = e.clientX - (e.clientX - canvas.width / 2 - panX) * (zoom / oldZoom) - canvas.width / 2;
+            panY = e.clientY - (e.clientY - canvas.height / 2 - panY) * (zoom / oldZoom) - canvas.height / 2;
 
-            const mouseX = e.clientX - canvas.getBoundingClientRect().left;
-            const mouseY = e.clientY - canvas.getBoundingClientRect().top;
-
-            state.panOffset.x = mouseX - (mouseX - state.panOffset.x) * (newZoom / state.zoom);
-            state.panOffset.y = mouseY - (mouseY - state.panOffset.y) * (newZoom / state.zoom);
-            state.zoom = newZoom;
-
-            document.getElementById('zoom-level').innerText = `${Math.round(state.zoom * 100)}%`;
-            render();
+            document.getElementById('zoom-status').textContent = Math.round(zoom * 100) + '%';
+            redraw();
         }, { passive: false });
 
-        function resetZoom() {
-            state.zoom = 1;
-            state.panOffset = { x: 0, y: 0 };
-            document.getElementById('zoom-level').innerText = '100%';
-            render();
-        }
+        function openTextInput(screenX, screenY, worldX, worldY) {
+            textOverlay.style.display = 'block';
+            textOverlay.style.left = screenX + 'px';
+            textOverlay.style.top = screenY + 'px';
+            textOverlay.value = '';
+            textOverlay.focus();
 
-        function triggerImageUpload() {
-            document.getElementById('image-loader').click();
-        }
-
-        function handleImageImport(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const aspect = img.width / img.height;
-                    const width = Math.min(300, img.width);
-                    const height = width / aspect;
-
-                    const imageEl = {
-                        id: 'img-' + Date.now(),
-                        type: 'image',
-                        img: img,
-                        src: event.target.result,
-                        x: (-state.panOffset.x + canvas.width / 2 - width / 2) / state.zoom,
-                        y: (-state.panOffset.y + canvas.height / 2 - height / 2) / state.zoom,
-                        width: width,
-                        height: height
-                    };
-
-                    if (window.addStorageElement) {
-                        window.addStorageElement(imageEl);
+            function commitText() {
+                const val = textOverlay.value.trim();
+                if (val) {
+                    const activeLayer = layers.find(l => l.id === activeLayerId);
+                    if (activeLayer && !activeLayer.locked) {
+                        saveStateToUndo();
+                        activeLayer.elements.push({
+                            type: 'text',
+                            text: val,
+                            color: strokeColor,
+                            size: brushSize,
+                            x: worldX,
+                            y: worldY
+                        });
+                        broadcastState();
+                        redraw();
                     }
-                    render();
-                };
-                img.src = event.target.result;
+                }
+                textOverlay.style.display = 'none';
+                textOverlay.onblur = null;
+                textOverlay.onkeydown = null;
+            }
+
+            textOverlay.onblur = commitText;
+            textOverlay.onkeydown = (ev) => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    commitText();
+                }
             };
-            reader.readAsDataURL(file);
         }
 
-        function toggleLayersPanel() {
-            const panel = document.getElementById('layers-panel');
-            panel.classList.toggle('hidden');
+        document.getElementById('btn-duplicate').addEventListener('click', () => {
+            if (selectedElements.length === 0) return;
+            saveStateToUndo();
+            const newSelection = [];
+            selectedElements.forEach(item => {
+                const targetLayer = layers.find(l => l.id === item.layerId);
+                if (targetLayer) {
+                    const clone = JSON.parse(JSON.stringify(item.el));
+                    translateElement(clone, 20, 20);
+                    targetLayer.elements.push(clone);
+                    newSelection.push({ el: clone, layerId: item.layerId });
+                }
+            });
+            selectedElements = newSelection;
+            redraw();
+            broadcastState();
+        });
+
+        document.getElementById('btn-delete').addEventListener('click', () => {
+            if (selectedElements.length === 0) return;
+            saveStateToUndo();
+            selectedElements.forEach(item => {
+                const targetLayer = layers.find(l => l.id === item.layerId);
+                if (targetLayer) {
+                    targetLayer.elements = targetLayer.elements.filter(el => el !== item.el);
+                }
+            });
+            selectedElements = [];
+            redraw();
+            broadcastState();
+        });
+
+        function renderLayersList() {
+            const listContainer = document.getElementById('layers-list');
+            listContainer.innerHTML = '';
+
+            layers.slice().reverse().forEach((layer, index) => {
+                const actualIndex = layers.length - 1 - index;
+                const item = document.createElement('div');
+                item.className = `layer-item ${layer.id === activeLayerId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span style="flex-grow:1; cursor:pointer;">${layer.name}</span>
+                    <div class="layer-actions">
+                        <button class="layer-btn" title="Toggle Visibility">${layer.visible ? '👁' : '🚫'}</button>
+                        <button class="layer-btn" title="Move Up" ${actualIndex === layers.length - 1 ? 'disabled style="opacity:0.3"' : ''}>▲</button>
+                        <button class="layer-btn" title="Move Down" ${actualIndex === 0 ? 'disabled style="opacity:0.3"' : ''}>▼</button>
+                        <button class="layer-btn" title="Delete">🗑</button>
+                    </div>
+                `;
+
+                item.querySelector('span').addEventListener('click', () => {
+                    activeLayerId = layer.id;
+                    renderLayersList();
+                });
+
+                const btns = item.querySelectorAll('.layer-btn');
+                btns[0].addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    layer.visible = !layer.visible;
+                    renderLayersList();
+                    redraw();
+                });
+                btns[1].addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (actualIndex < layers.length - 1) {
+                        const temp = layers[actualIndex];
+                        layers[actualIndex] = layers[actualIndex + 1];
+                        layers[actualIndex + 1] = temp;
+                        saveStateToUndo();
+                        renderLayersList();
+                        redraw();
+                        broadcastState();
+                    }
+                });
+                btns[2].addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (actualIndex > 0) {
+                        const temp = layers[actualIndex];
+                        layers[actualIndex] = layers[actualIndex - 1];
+                        layers[actualIndex - 1] = temp;
+                        saveStateToUndo();
+                        renderLayersList();
+                        redraw();
+                        broadcastState();
+                    }
+                });
+                btns[3].addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (layers.length > 1) {
+                        saveStateToUndo();
+                        layers.splice(actualIndex, 1);
+                        ensureActiveLayerValid();
+                        renderLayersList();
+                        redraw();
+                        broadcastState();
+                    }
+                });
+
+                listContainer.appendChild(item);
+            });
         }
 
-        function addLayer() {
-            saveUndoState();
-            const newId = 'layer-' + (state.layers.length + 1);
-            state.layers.unshift({
+        function ensureActiveLayerValid() {
+            if (!layers.some(l => l.id === activeLayerId)) {
+                activeLayerId = layers[0].id;
+            }
+        }
+
+        document.getElementById('btn-add-layer').addEventListener('click', () => {
+            saveStateToUndo();
+            const newId = 'layer_' + Date.now();
+            layers.push({
                 id: newId,
-                name: `Layer ${state.layers.length + 1}`,
+                name: `Layer ${layers.length + 1}`,
                 visible: true,
                 locked: false,
                 elements: []
             });
-            state.activeLayerId = newId;
-            updateLayersList();
-            render();
-        }
+            activeLayerId = newId;
+            renderLayersList();
+            redraw();
+            broadcastState();
+        });
 
-        function moveLayerUp(layerId) {
-            const index = state.layers.findIndex(l => l.id === layerId);
-            if (index > 0) {
-                saveUndoState();
-                const temp = state.layers[index];
-                state.layers[index] = state.layers[index - 1];
-                state.layers[index - 1] = temp;
-                updateLayersList();
-                render();
-            }
-        }
+        document.getElementById('btn-undo').addEventListener('click', () => {
+            if (undoStack.length === 0) return;
+            redoStack.push(JSON.parse(JSON.stringify(layers)));
+            layers = undoStack.pop();
+            ensureActiveLayerValid();
+            renderLayersList();
+            redraw();
+            broadcastState();
+        });
 
-        function moveLayerDown(layerId) {
-            const index = state.layers.findIndex(l => l.id === layerId);
-            if (index !== -1 && index < state.layers.length - 1) {
-                saveUndoState();
-                const temp = state.layers[index];
-                state.layers[index] = state.layers[index + 1];
-                state.layers[index + 1] = temp;
-                updateLayersList();
-                render();
-            }
-        }
+        document.getElementById('btn-redo').addEventListener('click', () => {
+            if (redoStack.length === 0) return;
+            undoStack.push(JSON.parse(JSON.stringify(layers)));
+            layers = redoStack.pop();
+            ensureActiveLayerValid();
+            renderLayersList();
+            redraw();
+            broadcastState();
+        });
 
-        function updateLayersList() {
-            const list = document.getElementById('layers-list');
-            list.innerHTML = '';
-
-            state.layers.forEach((layer, idx) => {
-                const isActive = layer.id === state.activeLayerId;
-                const div = document.createElement('div');
-                div.className = `p-2 rounded-lg text-xs flex items-center justify-between cursor-pointer transition-all ${
-                    isActive ? 'bg-slate-100 border border-slate-300 text-slate-900 font-semibold' : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
-                }`;
-
-                div.onclick = () => {
-                    state.activeLayerId = layer.id;
-                    updateLayersList();
-                };
-
-                const isFirst = idx === 0;
-                const isLast = idx === state.layers.length - 1;
-
-                div.innerHTML = `
-                    <div class="flex items-center space-x-2 truncate pr-1">
-                        <i class="fa-solid fa-layer-group text-slate-400 flex-shrink-0"></i>
-                        <span class="truncate">${layer.name}</span>
-                    </div>
-                    <div class="flex items-center space-x-1 flex-shrink-0">
-                        <button onclick="event.stopPropagation(); moveLayerUp('${layer.id}')" ${isFirst ? 'disabled class="p-1 text-slate-300 cursor-not-allowed"' : 'class="p-1 hover:text-slate-900 text-slate-500"'} title="Move Up">
-                            <i class="fa-solid fa-chevron-up"></i>
-                        </button>
-                        <button onclick="event.stopPropagation(); moveLayerDown('${layer.id}')" ${isLast ? 'disabled class="p-1 text-slate-300 cursor-not-allowed"' : 'class="p-1 hover:text-slate-900 text-slate-500"'} title="Move Down">
-                            <i class="fa-solid fa-chevron-down"></i>
-                        </button>
-                        <button onclick="event.stopPropagation(); toggleLayerVisibility('${layer.id}')" class="p-1 hover:text-slate-900 text-slate-500 ml-1" title="Toggle Visibility">
-                            <i class="fa-solid ${layer.visible ? 'fa-eye' : 'fa-eye-slash text-slate-400'}"></i>
-                        </button>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        function toggleLayerVisibility(layerId) {
-            const layer = state.layers.find(l => l.id === layerId);
-            if (layer) {
-                layer.visible = !layer.visible;
-                render();
-                updateLayersList();
-            }
-        }
-
-        function exportPNG() {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tCtx = tempCanvas.getContext('2d');
-
-            tCtx.fillStyle = '#FFFFFF';
-            tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tCtx.drawImage(canvas, 0, 0);
-
+        document.getElementById('btn-export').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = `vector-room-${state.currentRoomId}.png`;
-            link.href = tempCanvas.toDataURL('image/png');
+            link.download = 'vector-canvas.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
-        }
-
-        function updateRoomLabel() {
-            const label = document.getElementById('room-code-label');
-            if (label) {
-                label.innerText = `Room: ${state.currentRoomId}`;
-            }
-        }
-
-        function updateCollaboratorsUI() {
-            const container = document.getElementById('collaborators-container');
-            if (!container) return;
-
-            container.innerHTML = '';
-            const users = Object.values(state.collaborators || {});
-
-            users.forEach(u => {
-                const avatar = document.createElement('div');
-                avatar.className = 'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shadow-sm cursor-pointer';
-                avatar.style.backgroundColor = u.color || '#3b82f6';
-                avatar.title = u.name || 'Collaborator';
-                avatar.innerText = (u.name || 'A').charAt(0).toUpperCase();
-                container.appendChild(avatar);
-            });
-
-            if (users.length > 0) {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function copyRoomLink() {
-            const url = `${window.location.origin}${window.location.pathname}#room=${encodeURIComponent(state.currentRoomId)}`;
-            
-            const tempInput = document.createElement('input');
-            tempInput.value = url;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            showToast('Room link copied to clipboard!', 'success');
-        }
-
-        function openRoomModal() {
-            document.getElementById('room-input').value = state.currentRoomId;
-            document.getElementById('user-name-input').value = state.userName;
-            document.getElementById('room-modal').classList.remove('hidden');
-        }
-
-        function closeRoomModal() {
-            document.getElementById('room-modal').classList.add('hidden');
-        }
-
-        function switchRoomFromModal() {
-            const newRoom = document.getElementById('room-input').value.trim();
-            const newName = document.getElementById('user-name-input').value.trim();
-
-            if (newName) {
-                state.userName = newName;
-            }
-
-            if (newRoom && window.switchRoom) {
-                window.switchRoom(newRoom);
-            }
-
-            closeRoomModal();
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const bg = type === 'success' ? 'bg-emerald-800' : type === 'warning' ? 'bg-amber-800' : 'bg-slate-800';
-            toast.className = `${bg} text-white text-xs px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2 transition-all duration-300 transform translate-x-10 opacity-0 pointer-events-auto`;
-            
-            toast.innerHTML = `
-                <i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-info text-sky-400'}"></i>
-                <span>${message}</span>
-            `;
-
-            container.appendChild(toast);
-
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-x-10', 'opacity-0');
-            });
-
-            setTimeout(() => {
-                toast.classList.add('translate-x-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        window.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key.toLowerCase() === 'z') {
-                e.preventDefault();
-                undo();
-            } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
-                e.preventDefault();
-                redo();
-            } else if (e.key === 'Delete' || e.key === 'Backspace') {
-                deleteSelection();
-            } else if (e.code === 'Space' && !e.repeat) {
-                setTool('pan');
-            }
         });
 
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') {
-                setTool('brush');
-            }
-        });
-
-        window.onload = function() {
-            resizeCanvas();
-            updateLayersList();
-            if (window.initMultiplayer) {
-                window.initMultiplayer();
-            }
-        };
+        resizeCanvas();
+        renderLayersList();
     </script>
 </body>
 </html>
