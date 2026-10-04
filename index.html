@@ -38,7 +38,7 @@
             z-index: 1;
         }
 
-
+        /* Flush Top Bar */
         #topbar {
             position: absolute;
             top: 0;
@@ -72,7 +72,7 @@
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
-            border-radius: 0;
+            border-radius: 0px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -85,9 +85,9 @@
         }
 
         .btn.active {
-            background: #111;
-            color: #FFF;
-            border-color: #111;
+            background: #111111;
+            color: #FFFFFF;
+            border-color: #111111;
         }
 
         .separator {
@@ -98,6 +98,7 @@
             flex-shrink: 0;
         }
 
+        /* Floating Layers Panel */
         .panel {
             position: absolute;
             top: 60px;
@@ -107,7 +108,7 @@
             z-index: 150;
             display: flex;
             flex-direction: column;
-            border-radius: 0;
+            border-radius: 0px;
         }
 
         .panel-header {
@@ -149,7 +150,7 @@
         }
 
         .layer-item.active {
-            border-color: #111;
+            border-color: #111111;
             background: #F0F0F0;
             font-weight: 600;
         }
@@ -169,6 +170,7 @@
         }
         .layer-btn:hover { color: #000; }
 
+        /* Zoom & Status Badges */
         #zoom-status {
             position: absolute;
             bottom: 16px;
@@ -179,7 +181,6 @@
             font-size: 12px;
             font-weight: 500;
             z-index: 150;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
 
         #connection-badge {
@@ -192,7 +193,6 @@
             font-size: 12px;
             font-weight: 500;
             z-index: 150;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
             gap: 6px;
@@ -201,10 +201,11 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #ccc;
+            background: #CCCCCC;
         }
         .status-dot.connected { background: #10B981; }
 
+        /* Inputs */
         input[type="color"] {
             appearance: none;
             border: 1px solid #CCCCCC;
@@ -220,15 +221,14 @@
         #text-overlay {
             position: absolute;
             background: #FFFFFF;
-            border: 1px solid #111;
+            border: 1px solid #111111;
             outline: none;
             font-family: inherit;
             font-size: 16px;
             padding: 6px;
             z-index: 250;
             display: none;
-            resize: auto;
-            color: #111;
+            color: #111111;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
     </style>
@@ -236,17 +236,18 @@
 <body>
 
     <div id="canvas-container">
+        <!-- Top Toolbar -->
         <div id="topbar">
             <div class="toolbar-group">
-                <button class="btn active" data-tool="brush" title="Vector Brush">Brush</button>
-                <button class="btn" data-tool="eraser" title="Vector Eraser">Eraser</button>
-                <button class="btn" data-tool="lasso-fill" title="Lasso Fill">Lasso Fill</button>
-                <button class="btn" data-tool="lasso-select" title="Lasso Select & Move">Lasso Select</button>
-                <button class="btn" data-tool="rect" title="Rectangle">Rect</button>
-                <button class="btn" data-tool="circle" title="Circle">Circle</button>
-                <button class="btn" data-tool="line" title="Line">Line</button>
-                <button class="btn" data-tool="text" title="Text">Text</button>
-                <button class="btn" data-tool="pan" title="Pan Hand">Hand</button>
+                <button class="btn active" data-tool="brush">Brush</button>
+                <button class="btn" data-tool="eraser">Eraser</button>
+                <button class="btn" data-tool="lasso-fill">Lasso Fill</button>
+                <button class="btn" data-tool="lasso-select">Lasso Select</button>
+                <button class="btn" data-tool="rect">Rect</button>
+                <button class="btn" data-tool="circle">Circle</button>
+                <button class="btn" data-tool="line">Line</button>
+                <button class="btn" data-tool="text">Text</button>
+                <button class="btn" data-tool="pan">Hand</button>
             </div>
 
             <div class="separator"></div>
@@ -261,7 +262,7 @@
                 <div class="separator"></div>
 
                 <label style="font-size: 12px; font-weight: 500; display:flex; align-items:center; gap:4px;">
-                    <input type="checkbox" id="smoothing-toggle" checked> Flash Smooth: <span id="smooth-val">80</span>%
+                    <input type="checkbox" id="smoothing-toggle" checked> Smooth: <span id="smooth-val">80</span>%
                 </label>
                 <input type="range" id="smoothing-slider" min="0" max="100" value="80" style="width: 60px;">
             </div>
@@ -269,128 +270,52 @@
             <div class="separator"></div>
 
             <div class="toolbar-group">
-                <button class="btn" id="btn-undo" title="Undo">Undo</button>
-                <button class="btn" id="btn-redo" title="Redo">Redo</button>
+                <button class="btn" id="btn-undo">Undo</button>
+                <button class="btn" id="btn-redo">Redo</button>
                 <div class="separator"></div>
-                <button class="btn" id="btn-duplicate" title="Duplicate Selected Elements">Duplicate</button>
-                <button class="btn" id="btn-delete" title="Delete Selected Elements">Delete</button>
+                <button class="btn" id="btn-duplicate">Duplicate</button>
+                <button class="btn" id="btn-delete">Delete</button>
                 <div class="separator"></div>
-                <button class="btn" id="btn-share-room" title="Copy Collaborative Link">Share Room</button>
-                <button class="btn" id="btn-export" title="Export PNG">Export</button>
+                <button class="btn" id="btn-share-room">Share Room</button>
+                <button class="btn" id="btn-export">Export</button>
             </div>
         </div>
 
+        <!-- Layers Panel -->
         <div class="panel" id="layers-panel">
             <div class="panel-header">
                 <span>Layers</span>
-                <button class="layer-btn" id="btn-add-layer" title="Add Layer">+ New</button>
+                <button class="layer-btn" id="btn-add-layer">+ New</button>
             </div>
-            <div class="layers-list" id="layers-list">
-            </div>
+            <div class="layers-list" id="layers-list"></div>
         </div>
 
+        <!-- Zoom Status & P2P Badge -->
         <div id="zoom-status">100%</div>
-        <div id="connection-badge"><div class="status-dot" id="status-dot"></div><span id="status-text">Solo Mode</span></div>
+        <div id="connection-badge">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Ready</span>
+        </div>
 
+        <!-- Canvas -->
         <canvas id="board"></canvas>
-
         <input type="text" id="text-overlay" placeholder="Type text & press Enter...">
     </div>
 
     <script>
+        // Room Management
         let roomId = window.location.hash.replace('#room=', '');
         if (!roomId) {
-            roomId = 'canvas_' + Math.random().toString(36).substring(2, 8);
+            roomId = 'room_' + Math.random().toString(36).substring(2, 8);
             window.location.hash = 'room=' + roomId;
-        }
-
-        let peerConnection = null;
-        let dataChannel = null;
-        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        
-        let signalingSocket = null;
-        try {
-            signalingSocket = new WebSocket('wss://free.rtc.sh/' + roomId);
-            signalingSocket.onopen = () => {
-                document.getElementById('status-text').textContent = 'Connecting...';
-                initializeWebRTC(true);
-            };
-            signalingSocket.onmessage = async (event) => {
-                const message = JSON.parse(event.data);
-                if (!peerConnection) initializeWebRTC(false);
-
-                if (message.sdp) {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp));
-                    if (message.sdp.type === 'offer') {
-                        const answer = await peerConnection.createAnswer();
-                        await peerConnection.setLocalDescription(answer);
-                        signalingSocket.send(JSON.stringify({ sdp: peerConnection.localDescription }));
-                    }
-                } else if (message.candidate) {
-                    try {
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
-                    } catch (e) {}
-                }
-            };
-        } catch(e) {}
-
-        function initializeWebRTC(isInitiator) {
-            peerConnection = new RTCPeerConnection(rtcConfig);
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate && signalingSocket && signalingSocket.readyState === WebSocket.OPEN) {
-                    signalingSocket.send(JSON.stringify({ candidate: event.candidate }));
-                }
-            };
-
-            if (isInitiator) {
-                dataChannel = peerConnection.createDataChannel('canvas-sync');
-                setupDataChannel();
-                peerConnection.createOffer().then(offer => {
-                    peerConnection.setLocalDescription(offer);
-                    if (signalingSocket && signalingSocket.readyState === WebSocket.OPEN) {
-                        signalingSocket.send(JSON.stringify({ sdp: peerConnection.localDescription }));
-                    }
-                });
-            } else {
-                peerConnection.ondatachannel = (event) => {
-                    dataChannel = event.channel;
-                    setupDataChannel();
-                };
-            }
-        }
-
-        function setupDataChannel() {
-            dataChannel.onopen = () => {
-                document.getElementById('status-dot').classList.add('connected');
-                document.getElementById('status-text').textContent = 'Connected (P2P)';
-                broadcastState();
-            };
-            dataChannel.onclose = () => {
-                document.getElementById('status-dot').classList.remove('connected');
-                document.getElementById('status-text').textContent = 'Disconnected';
-            };
-            dataChannel.onmessage = (e) => {
-                try {
-                    const incomingLayers = JSON.parse(e.data);
-                    layers = incomingLayers;
-                    ensureActiveLayerValid();
-                    renderLayersList();
-                    redraw();
-                } catch(err) {}
-            };
-        }
-
-        function broadcastState() {
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify(layers));
-            }
         }
 
         document.getElementById('btn-share-room').addEventListener('click', () => {
             navigator.clipboard.writeText(window.location.href);
-            alert('Collaboration link copied to clipboard! Send this URL to your friend.');
+            alert('Room link copied! Open this URL in another tab or share it with a friend.');
         });
 
+        // App Core State
         let currentTool = 'brush';
         let strokeColor = '#000000';
         let brushSize = 4;
@@ -480,9 +405,7 @@
 
             layers.forEach(layer => {
                 if (!layer.visible) return;
-                layer.elements.forEach(el => {
-                    renderElement(ctx, el);
-                });
+                layer.elements.forEach(el => renderElement(ctx, el));
             });
 
             if (isDrawing && currentElement) {
@@ -615,20 +538,13 @@
 
         function translateElement(el, dx, dy) {
             if (el.type === 'brush' || el.type === 'eraser' || el.type === 'lasso-fill') {
-                if (el.points) {
-                    el.points.forEach(p => { p.x += dx; p.y += dy; });
-                }
-            } else if (el.type === 'rect' || el.type === 'text') {
-                el.x += dx;
-                el.y += dy;
-            } else if (el.type === 'circle') {
+                if (el.points) el.points.forEach(p => { p.x += dx; p.y += dy; });
+            } else if (el.type === 'rect' || el.type === 'text' || el.type === 'circle') {
                 el.x += dx;
                 el.y += dy;
             } else if (el.type === 'line') {
-                el.x1 += dx;
-                el.y1 += dy;
-                el.x2 += dx;
-                el.y2 += dy;
+                el.x1 += dx; el.y1 += dy;
+                el.x2 += dx; el.y2 += dy;
             }
         }
 
@@ -692,10 +608,7 @@
                     type: currentTool,
                     color: strokeColor,
                     size: brushSize,
-                    x: pos.x,
-                    y: pos.y,
-                    w: 0,
-                    h: 0
+                    x: pos.x, y: pos.y, w: 0, h: 0
                 };
             } else if (currentTool === 'line') {
                 isDrawing = true;
@@ -703,10 +616,7 @@
                     type: currentTool,
                     color: strokeColor,
                     size: brushSize,
-                    x1: pos.x,
-                    y1: pos.y,
-                    x2: pos.x,
-                    y2: pos.y
+                    x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y
                 };
             } else if (currentTool === 'lasso-fill') {
                 isDrawing = true;
@@ -747,9 +657,7 @@
             if (isDraggingSelection) {
                 const dx = pos.x - lastDragWorldX;
                 const dy = pos.y - lastDragWorldY;
-                selectedElements.forEach(item => {
-                    translateElement(item.el, dx, dy);
-                });
+                selectedElements.forEach(item => translateElement(item.el, dx, dy));
                 lastDragWorldX = pos.x;
                 lastDragWorldY = pos.y;
                 redraw();
@@ -773,17 +681,8 @@
         });
 
         window.addEventListener('pointerup', (e) => {
-            if (isPanning) {
-                isPanning = false;
-                return;
-            }
-
-            if (isDraggingSelection) {
-                isDraggingSelection = false;
-                broadcastState();
-                return;
-            }
-
+            if (isPanning) { isPanning = false; return; }
+            if (isDraggingSelection) { isDraggingSelection = false; return; }
             if (!isDrawing) return;
             isDrawing = false;
 
@@ -796,12 +695,10 @@
                 saveStateToUndo();
                 activeLayer.elements.push(currentElement);
                 currentElement = null;
-                broadcastState();
             } else if ((currentTool === 'rect' || currentTool === 'circle' || currentTool === 'line') && currentElement) {
                 if (Math.abs(currentElement.w || (currentElement.x2 - currentElement.x1)) > 2) {
                     saveStateToUndo();
                     activeLayer.elements.push(currentElement);
-                    broadcastState();
                 }
                 currentElement = null;
             } else if (currentTool === 'lasso-fill') {
@@ -813,7 +710,6 @@
                         size: brushSize,
                         points: [...lassoPoints]
                     });
-                    broadcastState();
                 }
                 lassoPoints = [];
             } else if (currentTool === 'lasso-select') {
@@ -869,7 +765,6 @@
                             x: worldX,
                             y: worldY
                         });
-                        broadcastState();
                         redraw();
                     }
                 }
@@ -902,7 +797,6 @@
             });
             selectedElements = newSelection;
             redraw();
-            broadcastState();
         });
 
         document.getElementById('btn-delete').addEventListener('click', () => {
@@ -916,7 +810,6 @@
             });
             selectedElements = [];
             redraw();
-            broadcastState();
         });
 
         function renderLayersList() {
@@ -958,7 +851,6 @@
                         saveStateToUndo();
                         renderLayersList();
                         redraw();
-                        broadcastState();
                     }
                 });
                 btns[2].addEventListener('click', (e) => {
@@ -970,7 +862,6 @@
                         saveStateToUndo();
                         renderLayersList();
                         redraw();
-                        broadcastState();
                     }
                 });
                 btns[3].addEventListener('click', (e) => {
@@ -981,7 +872,6 @@
                         ensureActiveLayerValid();
                         renderLayersList();
                         redraw();
-                        broadcastState();
                     }
                 });
 
@@ -1008,7 +898,6 @@
             activeLayerId = newId;
             renderLayersList();
             redraw();
-            broadcastState();
         });
 
         document.getElementById('btn-undo').addEventListener('click', () => {
@@ -1018,7 +907,6 @@
             ensureActiveLayerValid();
             renderLayersList();
             redraw();
-            broadcastState();
         });
 
         document.getElementById('btn-redo').addEventListener('click', () => {
@@ -1028,7 +916,6 @@
             ensureActiveLayerValid();
             renderLayersList();
             redraw();
-            broadcastState();
         });
 
         document.getElementById('btn-export').addEventListener('click', () => {
