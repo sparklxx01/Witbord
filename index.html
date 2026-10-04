@@ -4,28 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vector Studio Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-user-select: none;
         }
+
         body, html {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: #FFFFFF;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #111;
+            background: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #0f172a;
         }
 
-        #canvas-container {
+        #app-container {
             width: 100vw;
             height: 100vh;
             position: relative;
-            background: #FFFFFF;
-            cursor: crosshair;
+            background: #ffffff;
         }
 
         canvas {
@@ -36,291 +39,331 @@
             top: 0;
             left: 0;
             z-index: 1;
+            cursor: crosshair;
         }
 
-        /* Flush Top Bar */
-        #topbar {
+        #header-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 48px;
-            background: #FFFFFF;
-            border-bottom: 1px solid #E5E5E5;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 0 12px;
-            gap: 12px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
             z-index: 200;
-            overflow-x: auto;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .tool-segmented-bar {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .tool-btn {
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
             white-space: nowrap;
         }
 
-        .toolbar-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
+        .tool-btn:hover {
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.6);
         }
 
-        .btn {
-            background: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            color: #222;
-            padding: 5px 10px;
-            font-size: 12px;
-            font-weight: 500;
+        .tool-btn.active {
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Color Dot Preset Styles */
+        .color-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
             cursor: pointer;
-            border-radius: 0px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: background 0.1s, border-color 0.1s;
+            transition: transform 0.1s, box-shadow 0.1s;
+            border: 1px solid rgba(0,0,0,0.15);
         }
 
-        .btn:hover {
-            background: #F4F4F4;
-            border-color: #999;
+        .color-dot:hover {
+            transform: scale(1.15);
         }
 
-        .btn.active {
-            background: #111111;
-            color: #FFFFFF;
-            border-color: #111111;
+        .color-dot.active {
+            box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0f172a;
         }
 
-        .separator {
-            width: 1px;
-            height: 24px;
-            background: #E5E5E5;
-            margin: 0 4px;
-            flex-shrink: 0;
+        /* Modern Range Sliders */
+        input[type="range"] {
+            accent-color: #0f172a;
+            height: 4px;
+            border-radius: 2px;
+            cursor: pointer;
         }
 
-        /* Floating Layers Panel */
-        .panel {
-            position: absolute;
-            top: 60px;
-            background: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            z-index: 150;
-            display: flex;
-            flex-direction: column;
-            border-radius: 0px;
+        /* Custom Color Picker Input */
+        input[type="color"] {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid #cbd5e1;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+            border-radius: 4px;
+            overflow: hidden;
         }
-
-        .panel-header {
-            padding: 8px 12px;
-            background: #FAFAFA;
-            border-bottom: 1px solid #E5E5E5;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
 
         #layers-panel {
+            position: absolute;
+            top: 100px;
             right: 16px;
-            width: 220px;
-        }
-
-        .layers-list {
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            width: 280px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+            z-index: 150;
+            display: none;
+            overflow: hidden;
         }
 
         .layer-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 8px;
-            background: #FAFAFA;
-            border: 1px solid #E5E5E5;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            margin-bottom: 6px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+
+        .layer-item:hover {
+            border-color: #cbd5e1;
         }
 
         .layer-item.active {
-            border-color: #111111;
-            background: #F0F0F0;
+            background: #f8fafc;
+            border-color: #0f172a;
             font-weight: 600;
         }
 
-        .layer-actions {
-            display: flex;
-            gap: 4px;
-        }
-
         .layer-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 11px;
-            padding: 2px 4px;
-            color: #555;
+            padding: 3px 5px;
+            border-radius: 4px;
+            color: #64748b;
+            transition: color 0.1s, background 0.1s;
         }
-        .layer-btn:hover { color: #000; }
+        .layer-btn:hover {
+            color: #0f172a;
+            background: #e2e8f0;
+        }
 
-        /* Zoom & Status Badges */
-        #zoom-status {
+        #file-input { display: none; }
+
+        /* Notification Toast */
+        #toast {
             position: absolute;
-            bottom: 16px;
-            left: 16px;
-            background: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            padding: 6px 12px;
-            font-size: 12px;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #0f172a;
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 500;
-            z-index: 150;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 300;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        #connection-badge {
-            position: absolute;
-            bottom: 16px;
-            left: 110px;
-            background: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 500;
-            z-index: 150;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #CCCCCC;
-        }
-        .status-dot.connected { background: #10B981; }
-
-        /* Inputs */
-        input[type="color"] {
-            appearance: none;
-            border: 1px solid #CCCCCC;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            background: none;
-            padding: 0;
-        }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: none; }
-
-        #text-overlay {
-            position: absolute;
-            background: #FFFFFF;
-            border: 1px solid #111111;
-            outline: none;
-            font-family: inherit;
-            font-size: 16px;
-            padding: 6px;
-            z-index: 250;
-            display: none;
-            color: #111111;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container">
-        <!-- Top Toolbar -->
-        <div id="topbar">
-            <div class="toolbar-group">
-                <button class="btn active" data-tool="brush">Brush</button>
-                <button class="btn" data-tool="eraser">Eraser</button>
-                <button class="btn" data-tool="lasso-fill">Lasso Fill</button>
-                <button class="btn" data-tool="lasso-select">Lasso Select</button>
-                <button class="btn" data-tool="rect">Rect</button>
-                <button class="btn" data-tool="circle">Circle</button>
-                <button class="btn" data-tool="line">Line</button>
-                <button class="btn" data-tool="text">Text</button>
-                <button class="btn" data-tool="pan">Hand</button>
+    <div id="app-container">
+        <!-- Main Top Navigation Container -->
+        <div id="header-container">
+            <!-- Row 1: Brand Title, Center Tools, Right Action Buttons -->
+            <div class="h-14 px-4 flex items-center justify-between border-b border-slate-100">
+                <!-- Brand Title (Without logo per request) -->
+                <div class="flex items-center gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900 text-sm tracking-tight">Vector Studio</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-normal leading-tight">Real-Time Collaborative Vector Canvas</p>
+                    </div>
+                </div>
+
+                <!-- Center Tool Segmented Group (No icons for Lasso Select, Lasso Fill, Pan) -->
+                <div class="tool-segmented-bar">
+                    <button class="tool-btn active" data-tool="brush" title="Brush Tool (B)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        <span>Brush</span>
+                    </button>
+                    <button class="tool-btn" data-tool="lasso-select" title="Lasso Select Tool">
+                        <span>Lasso Select</span>
+                    </button>
+                    <button class="tool-btn" data-tool="lasso-fill" title="Lasso Fill Tool">
+                        <span>Lasso Fill</span>
+                    </button>
+                    <button class="tool-btn" data-tool="pan" title="Pan Canvas (Space)">
+                        <span>Pan (Space)</span>
+                    </button>
+                    <button class="tool-btn" id="btn-image-tool" title="Insert Image">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Right Action Buttons (No clear canvas button per request) -->
+                <div class="flex items-center gap-2">
+                    <button id="btn-share" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        <span>Share</span>
+                    </button>
+
+                    <div class="w-px h-5 bg-slate-200 my-auto"></div>
+
+                    <button id="btn-undo" class="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition" title="Undo (Ctrl+Z)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                    </button>
+                    <button id="btn-redo" class="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition" title="Redo (Ctrl+Y)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"/></svg>
+                    </button>
+
+                    <div class="w-px h-5 bg-slate-200 my-auto"></div>
+
+                    <button id="btn-export" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Export</span>
+                    </button>
+
+                    <button id="btn-toggle-layers" class="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition" title="Toggle Layers Panel">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </button>
+                </div>
             </div>
 
-            <div class="separator"></div>
+            <div class="h-10 px-4 flex items-center justify-between text-xs text-slate-600 bg-white">
+                <div class="flex items-center gap-4">
+                    <!-- Color Options -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-slate-500">Color:</span>
+                        <input type="color" id="stroke-color" value="#0f172a" title="Choose Custom Color">
+                        
+                        <div class="flex items-center gap-1.5 ml-1">
+                            <div class="color-dot active" style="background-color: #0f172a;" data-color="#0f172a"></div>
+                            <div class="color-dot" style="background-color: #334155;" data-color="#334155"></div>
+                            <div class="color-dot" style="background-color: #ef4444;" data-color="#ef4444"></div>
+                            <div class="color-dot" style="background-color: #10b981;" data-color="#10b981"></div>
+                            <div class="color-dot" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+                            <div class="color-dot" style="background-color: #8b5cf6;" data-color="#8b5cf6"></div>
+                        </div>
+                    </div>
 
-            <div class="toolbar-group">
-                <label style="font-size: 12px; font-weight: 500;">Color:</label>
-                <input type="color" id="stroke-color" value="#000000">
-                
-                <label style="font-size: 12px; font-weight: 500; margin-left: 8px;">Size: <span id="size-val">4</span>px</label>
-                <input type="range" id="brush-size" min="1" max="80" value="4" style="width: 80px;">
+                    <div class="w-px h-4 bg-slate-200"></div>
 
-                <div class="separator"></div>
+                    <!-- Base Size Slider -->
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-slate-500">Base Size:</span>
+                        <input type="range" id="brush-size" min="1" max="100" value="12" class="w-20">
+                        <span id="size-val" class="font-medium min-w-[28px] text-slate-700">12px</span>
+                    </div>
 
-                <label style="font-size: 12px; font-weight: 500; display:flex; align-items:center; gap:4px;">
-                    <input type="checkbox" id="smoothing-toggle" checked> Smooth: <span id="smooth-val">80</span>%
-                </label>
-                <input type="range" id="smoothing-slider" min="0" max="100" value="80" style="width: 60px;">
-            </div>
+                    <div class="w-px h-4 bg-slate-200"></div>
 
-            <div class="separator"></div>
+                    <!-- Velocity Tapering Checkbox -->
+                    <label class="flex items-center gap-1.5 cursor-pointer font-medium text-slate-600 hover:text-slate-900">
+                        <input type="checkbox" id="velocity-toggle" checked class="rounded border-slate-300 text-slate-900 focus:ring-0">
+                        <span>Velocity Tapering</span>
+                    </label>
 
-            <div class="toolbar-group">
-                <button class="btn" id="btn-undo">Undo</button>
-                <button class="btn" id="btn-redo">Redo</button>
-                <div class="separator"></div>
-                <button class="btn" id="btn-duplicate">Duplicate</button>
-                <button class="btn" id="btn-delete">Delete</button>
-                <div class="separator"></div>
-                <button class="btn" id="btn-share-room">Share Room</button>
-                <button class="btn" id="btn-export">Export</button>
+                    <div class="w-px h-4 bg-slate-200"></div>
+
+                    <!-- Stroke Smoothing Slider -->
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-1.5 cursor-pointer font-medium text-slate-600">
+                            <input type="checkbox" id="smooth-toggle" checked class="rounded border-slate-300 text-slate-900 focus:ring-0">
+                            <span>Stroke Smoothing:</span>
+                        </label>
+                        <input type="range" id="smoothing-slider" min="0" max="100" value="70" class="w-20">
+                        <span id="smooth-val" class="font-medium min-w-[24px] text-slate-700">5px</span>
+                    </div>
+                </div>
+
+                <!-- Right View Controls -->
+                <div class="flex items-center gap-3">
+                    <span id="zoom-status" class="font-medium text-slate-500">100%</span>
+                    <button id="btn-reset-view" class="font-semibold text-slate-700 hover:text-slate-900 underline underline-offset-2 transition">Reset View</button>
+                </div>
             </div>
         </div>
 
-        <!-- Layers Panel -->
-        <div class="panel" id="layers-panel">
-            <div class="panel-header">
-                <span>Layers</span>
-                <button class="layer-btn" id="btn-add-layer">+ New</button>
+        <div id="layers-panel" class="p-3">
+            <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
+                <span class="font-bold text-xs text-slate-800 uppercase tracking-wider">Layers</span>
+                <button id="btn-add-layer" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">+ Add Layer</button>
             </div>
-            <div class="layers-list" id="layers-list"></div>
+            <div id="layers-list" class="max-h-60 overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Zoom Status & P2P Badge -->
-        <div id="zoom-status">100%</div>
-        <div id="connection-badge">
-            <div class="status-dot" id="status-dot"></div>
-            <span id="status-text">Ready</span>
-        </div>
+        <!-- Canvas Element -->
+        <canvas id="canvas"></canvas>
 
-        <!-- Canvas -->
-        <canvas id="board"></canvas>
-        <input type="text" id="text-overlay" placeholder="Type text & press Enter...">
+        <!-- Hidden Inputs -->
+        <input type="file" id="file-input" accept="image/*">
+
+        <!-- Notification Toast -->
+        <div id="toast">Copied share link to clipboard!</div>
     </div>
 
     <script>
-        // Room Management
-        let roomId = window.location.hash.replace('#room=', '');
-        if (!roomId) {
-            roomId = 'room_' + Math.random().toString(36).substring(2, 8);
-            window.location.hash = 'room=' + roomId;
+        const imageCache = new Map();
+        function getCachedImage(src) {
+            if (!src) return null;
+            if (imageCache.has(src)) return imageCache.get(src);
+            const img = new Image();
+            img.src = src;
+            img.onload = () => redraw();
+            imageCache.set(src, img);
+            return img;
         }
 
-        document.getElementById('btn-share-room').addEventListener('click', () => {
-            navigator.clipboard.writeText(window.location.href);
-            alert('Room link copied! Open this URL in another tab or share it with a friend.');
-        });
-
-        // App Core State
         let currentTool = 'brush';
-        let strokeColor = '#000000';
-        let brushSize = 4;
-        let flashSmoothingEnabled = true;
-        let smoothingStrength = 80;
+        let strokeColor = '#0f172a';
+        let brushSize = 12;
+        let velocityEnabled = true;
+        let smoothEnabled = true;
+        let smoothingAmount = 70;
 
         let panX = 0, panY = 0, zoom = 1;
         let isPanning = false, panStartX = 0, panStartY = 0;
@@ -334,18 +377,78 @@
         let redoStack = [];
 
         let isDrawing = false;
-        let currentPathPoints = [];
+        let currentRawPoints = [];
         let currentElement = null;
 
         let lassoPoints = [];
-        let selectedElements = [];
+        let selectedElements = []; // { el, layerId }
         let isDraggingSelection = false;
         let lastDragWorldX = 0;
         let lastDragWorldY = 0;
 
-        const canvas = document.getElementById('board');
+        const peerId = 'user_' + Math.floor(Math.random() * 10000);
+        const peerColor = ['#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'][Math.floor(Math.random() * 5)];
+        const remotePeers = new Map(); // id -> { x, y, color, name, lastSeen }
+        let syncChannel = null;
+
+        try {
+            syncChannel = new BroadcastChannel('vector_studio_multiplayer');
+            syncChannel.onmessage = (e) => handleMultiplayerMessage(e.data);
+            syncChannel.postMessage({ type: 'join', peerId, peerColor });
+        } catch(err) {
+            console.log('BroadcastChannel not supported in this environment');
+        }
+
+        function broadcastState() {
+            if (syncChannel) {
+                syncChannel.postMessage({ type: 'sync_layers', layers, sender: peerId });
+            }
+        }
+
+        function broadcastCursor(x, y) {
+            if (syncChannel) {
+                syncChannel.postMessage({ type: 'cursor', peerId, peerColor, x, y });
+            }
+        }
+
+        function handleMultiplayerMessage(data) {
+            if (data.sender === peerId || data.peerId === peerId) return;
+
+            if (data.type === 'join') {
+                broadcastState();
+            } else if (data.type === 'cursor') {
+                remotePeers.set(data.peerId, {
+                    x: data.x,
+                    y: data.y,
+                    color: data.peerColor,
+                    lastSeen: Date.now()
+                });
+                redraw();
+            } else if (data.type === 'sync_layers') {
+                layers = data.layers;
+                if (!layers.some(l => l.id === activeLayerId)) {
+                    activeLayerId = layers[0] ? layers[0].id : 'layer_1';
+                }
+                renderLayersList();
+                redraw();
+            }
+        }
+
+        setInterval(() => {
+            const now = Date.now();
+            let changed = false;
+            remotePeers.forEach((peer, id) => {
+                if (now - peer.lastSeen > 5000) {
+                    remotePeers.delete(id);
+                    changed = true;
+                }
+            });
+            if (changed) redraw();
+        }, 2000);
+
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const textOverlay = document.getElementById('text-overlay');
+        const fileInput = document.getElementById('file-input');
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -360,39 +463,37 @@
             return { x: wx, y: wy };
         }
 
-        function simplifyAndSmoothPath(points, smoothness) {
-            if (points.length < 3) return points;
-            let weighted = [];
-            for (let i = 0; i < points.length; i++) {
-                let p = points[i];
-                let w = p.w;
-                if (smoothness > 0 && i > 0 && i < points.length - 1) {
-                    let prev = points[i-1];
-                    let next = points[i+1];
-                    let dist = Math.hypot(next.x - prev.x, next.y - prev.y);
-                    let factor = Math.min(1, dist / 20);
-                    w = p.w * (1 - (smoothness / 100) * 0.3 * (1 - factor));
-                }
-                weighted.push({ x: p.x, y: p.y, w: Math.max(0.5, w) });
+        function getSmoothStrokePoints(rawPoints, isVelocityOn, baseSize) {
+            if (rawPoints.length < 2) {
+                return rawPoints.map(p => ({ x: p.x, y: p.y, w: p.w || baseSize }));
             }
 
-            let smoothed = [...weighted];
-            let iterations = Math.round((smoothness / 100) * 2);
-            for (let iter = 0; iter < iterations; iter++) {
-                let nextIter = [];
-                nextIter.push(smoothed[0]);
-                for (let i = 0; i < smoothed.length - 1; i++) {
-                    let p0 = smoothed[i];
-                    let p1 = smoothed[i+1];
-                    let Q = { x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y, w: 0.75 * p0.w + 0.25 * p1.w };
-                    let R = { x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y, w: 0.25 * p0.w + 0.75 * p1.w };
-                    nextIter.push(Q);
-                    nextIter.push(R);
+            let filtered = [rawPoints[0]];
+            for (let i = 1; i < rawPoints.length; i++) {
+                const prev = filtered[filtered.length - 1];
+                const curr = rawPoints[i];
+                const dist = Math.hypot(curr.x - prev.x, curr.y - prev.y);
+                if (dist >= 2) {
+                    filtered.push(curr);
                 }
-                nextIter.push(smoothed[smoothed.length - 1]);
-                smoothed = nextIter;
             }
-            return smoothed;
+
+            if (filtered.length < 2) return filtered;
+
+            let smoothedPoints = [];
+            let currentWidth = filtered[0].w || baseSize;
+
+            for (let i = 0; i < filtered.length; i++) {
+                const targetWidth = filtered[i].w || baseSize;
+                currentWidth = currentWidth * 0.65 + targetWidth * 0.35;
+                smoothedPoints.push({
+                    x: filtered[i].x,
+                    y: filtered[i].y,
+                    w: Math.max(1, currentWidth)
+                });
+            }
+
+            return smoothedPoints;
         }
 
         function redraw() {
@@ -403,46 +504,86 @@
             ctx.scale(zoom, zoom);
             ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
+            // Render Layers Bottom to Top
             layers.forEach(layer => {
                 if (!layer.visible) return;
                 layer.elements.forEach(el => renderElement(ctx, el));
             });
 
+            // Render Active Preview Element
             if (isDrawing && currentElement) {
                 renderElement(ctx, currentElement);
             }
 
+            // Render Lasso Polygon Preview
             if (lassoPoints.length > 0) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.strokeStyle = '#0066FF';
+                ctx.strokeStyle = '#3b82f6';
                 ctx.lineWidth = 1.5 / zoom;
-                ctx.setLineDash([4 / zoom, 4 / zoom]);
+                ctx.setLineDash([5 / zoom, 5 / zoom]);
                 ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
                 for (let i = 1; i < lassoPoints.length; i++) {
                     ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
                 }
                 if (currentTool === 'lasso-fill') {
                     ctx.closePath();
-                    ctx.fillStyle = 'rgba(0, 102, 255, 0.1)';
+                    ctx.fillStyle = strokeColor + '33';
                     ctx.fill();
                 }
                 ctx.stroke();
                 ctx.restore();
             }
 
+            // Render Bounding Box for Selected Elements
             if (selectedElements.length > 0) {
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                 selectedElements.forEach(item => {
                     const bounds = getElementBounds(item.el);
                     if (bounds) {
-                        ctx.save();
-                        ctx.strokeStyle = '#0066FF';
-                        ctx.lineWidth = 1.5 / zoom;
-                        ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
-                        ctx.restore();
+                        minX = Math.min(minX, bounds.x);
+                        minY = Math.min(minY, bounds.y);
+                        maxX = Math.max(maxX, bounds.x + bounds.width);
+                        maxY = Math.max(maxY, bounds.y + bounds.height);
                     }
                 });
+
+                if (minX !== Infinity) {
+                    ctx.save();
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 1.5 / zoom;
+                    ctx.setLineDash([6 / zoom, 4 / zoom]);
+                    ctx.strokeRect(minX - 6 / zoom, minY - 6 / zoom, (maxX - minX) + 12 / zoom, (maxY - minY) + 12 / zoom);
+                    
+                    ctx.fillStyle = '#3b82f6';
+                    const handleSize = 6 / zoom;
+                    ctx.fillRect(minX - 6 / zoom - handleSize / 2, minY - 6 / zoom - handleSize / 2, handleSize, handleSize);
+                    ctx.fillRect(maxX + 6 / zoom - handleSize / 2, maxY + 6 / zoom - handleSize / 2, handleSize, handleSize);
+                    ctx.restore();
+                }
             }
+
+            // Render Multiplayer Remote Cursors
+            remotePeers.forEach(peer => {
+                ctx.save();
+                ctx.translate(peer.x, peer.y);
+                ctx.fillStyle = peer.color || '#3b82f6';
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, 14 / zoom);
+                ctx.lineTo(4 / zoom, 10 / zoom);
+                ctx.lineTo(9 / zoom, 16 / zoom);
+                ctx.lineTo(11 / zoom, 14.5 / zoom);
+                ctx.lineTo(6 / zoom, 9 / zoom);
+                ctx.lineTo(11 / zoom, 9 / zoom);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.font = `${Math.max(10, 11 / zoom)}px Inter, sans-serif`;
+                ctx.fillStyle = peer.color || '#3b82f6';
+                ctx.fillText('Collaborator', 12 / zoom, 16 / zoom);
+                ctx.restore();
+            });
 
             ctx.restore();
         }
@@ -451,48 +592,43 @@
             context.save();
             if (el.type === 'brush' || el.type === 'eraser') {
                 if (!el.points || el.points.length === 0) return;
+
                 context.strokeStyle = el.color;
+                context.fillStyle = el.color;
                 context.lineCap = 'round';
                 context.lineJoin = 'round';
-                if (el.type === 'eraser') {
-                    context.globalCompositeOperation = 'destination-out';
-                }
 
-                for (let i = 0; i < el.points.length - 1; i++) {
-                    let p1 = el.points[i];
-                    let p2 = el.points[i+1];
+                if (el.points.length === 1) {
                     context.beginPath();
-                    context.moveTo(p1.x, p1.y);
-                    context.lineTo(p2.x, p2.y);
-                    context.lineWidth = (p1.w + p2.w) / 2;
+                    context.arc(el.points[0].x, el.points[0].y, (el.points[0].w || el.size) / 2, 0, Math.PI * 2);
+                    context.fill();
+                } else if (el.points.length === 2) {
+                    context.beginPath();
+                    context.lineWidth = (el.points[0].w + el.points[1].w) / 2;
+                    context.moveTo(el.points[0].x, el.points[0].y);
+                    context.lineTo(el.points[1].x, el.points[1].y);
                     context.stroke();
+                } else {
+                    for (let i = 0; i < el.points.length - 1; i++) {
+                        const p1 = el.points[i];
+                        const p2 = el.points[i + 1];
+                        const midX = (p1.x + p2.x) / 2;
+                        const midY = (p1.y + p2.y) / 2;
+
+                        context.beginPath();
+                        context.lineWidth = (p1.w + p2.w) / 2;
+                        if (i === 0) {
+                            context.moveTo(p1.x, p1.y);
+                            context.lineTo(midX, midY);
+                        } else {
+                            const prevMidX = (el.points[i - 1].x + p1.x) / 2;
+                            const prevMidY = (el.points[i - 1].y + p1.y) / 2;
+                            context.moveTo(prevMidX, prevMidY);
+                            context.quadraticCurveTo(p1.x, p1.y, midX, midY);
+                        }
+                        context.stroke();
+                    }
                 }
-            } else if (el.type === 'rect') {
-                context.strokeStyle = el.color;
-                context.lineWidth = el.size;
-                context.strokeRect(el.x, el.y, el.w, el.h);
-            } else if (el.type === 'circle') {
-                context.beginPath();
-                let rx = Math.abs(el.w / 2);
-                let ry = Math.abs(el.h / 2);
-                let cx = el.x + el.w / 2;
-                let cy = el.y + el.h / 2;
-                context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-                context.strokeStyle = el.color;
-                context.lineWidth = el.size;
-                context.stroke();
-            } else if (el.type === 'line') {
-                context.beginPath();
-                context.moveTo(el.x1, el.y1);
-                context.lineTo(el.x2, el.y2);
-                context.strokeStyle = el.color;
-                context.lineWidth = el.size;
-                context.lineCap = 'round';
-                context.stroke();
-            } else if (el.type === 'text') {
-                context.fillStyle = el.color;
-                context.font = `${Math.max(12, el.size * 4)}px sans-serif`;
-                context.fillText(el.text, el.x, el.y);
             } else if (el.type === 'lasso-fill') {
                 if (!el.points || el.points.length < 3) return;
                 context.beginPath();
@@ -504,8 +640,13 @@
                 context.fillStyle = el.color;
                 context.fill();
                 context.strokeStyle = el.color;
-                context.lineWidth = el.size;
+                context.lineWidth = el.size || 1;
                 context.stroke();
+            } else if (el.type === 'image') {
+                const img = getCachedImage(el.src);
+                if (img && img.complete && img.naturalWidth !== 0) {
+                    context.drawImage(img, el.x, el.y, el.w, el.h);
+                }
             }
             context.restore();
         }
@@ -515,23 +656,15 @@
                 if (!el.points || el.points.length === 0) return null;
                 let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                 el.points.forEach(p => {
-                    minX = Math.min(minX, p.x);
-                    minY = Math.min(minY, p.y);
-                    maxX = Math.max(maxX, p.x);
-                    maxY = Math.max(maxY, p.y);
+                    const radius = (p.w || el.size || 2) / 2;
+                    minX = Math.min(minX, p.x - radius);
+                    minY = Math.min(minY, p.y - radius);
+                    maxX = Math.max(maxX, p.x + radius);
+                    maxY = Math.max(maxY, p.y + radius);
                 });
                 return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-            } else if (el.type === 'rect' || el.type === 'text') {
-                return { x: el.x, y: el.y, width: el.w || 100, height: el.h || 24 };
-            } else if (el.type === 'circle') {
-                return { x: el.x, y: el.y, width: el.w, height: el.h };
-            } else if (el.type === 'line') {
-                return {
-                    x: Math.min(el.x1, el.x2),
-                    y: Math.min(el.y1, el.y2),
-                    width: Math.abs(el.x2 - el.x1),
-                    height: Math.abs(el.y2 - el.y1)
-                };
+            } else if (el.type === 'image') {
+                return { x: el.x, y: el.y, width: el.w || 120, height: el.h || 120 };
             }
             return null;
         }
@@ -539,48 +672,56 @@
         function translateElement(el, dx, dy) {
             if (el.type === 'brush' || el.type === 'eraser' || el.type === 'lasso-fill') {
                 if (el.points) el.points.forEach(p => { p.x += dx; p.y += dy; });
-            } else if (el.type === 'rect' || el.type === 'text' || el.type === 'circle') {
+            } else if (el.type === 'image') {
                 el.x += dx;
                 el.y += dy;
-            } else if (el.type === 'line') {
-                el.x1 += dx; el.y1 += dy;
-                el.x2 += dx; el.y2 += dy;
             }
         }
 
+        function isPointInPolygon(point, polygon) {
+            let x = point.x, y = point.y;
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                let xi = polygon[i].x, yi = polygon[i].y;
+                let xj = polygon[j].x, yj = polygon[j].y;
+                let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
         function saveStateToUndo() {
-            undoStack.push(JSON.parse(JSON.stringify(layers)));
-            if (undoStack.length > 50) undoStack.shift();
+            undoStack.push(JSON.stringify(layers));
+            if (undoStack.length > 30) undoStack.shift();
             redoStack = [];
         }
 
-        const tools = document.querySelectorAll('[data-tool]');
-        tools.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                tools.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentTool = btn.getAttribute('data-tool');
-                if (currentTool !== 'lasso-select') {
-                    selectedElements = [];
-                    redraw();
-                }
-            });
-        });
+        function undo() {
+            if (undoStack.length === 0) return;
+            redoStack.push(JSON.stringify(layers));
+            layers = JSON.parse(undoStack.pop());
+            if (!layers.some(l => l.id === activeLayerId)) activeLayerId = layers[0] ? layers[0].id : 'layer_1';
+            renderLayersList();
+            broadcastState();
+            redraw();
+        }
 
-        document.getElementById('stroke-color').addEventListener('input', (e) => { strokeColor = e.target.value; });
-        document.getElementById('brush-size').addEventListener('input', (e) => {
-            brushSize = parseInt(e.target.value);
-            document.getElementById('size-val').textContent = brushSize;
-        });
+        function redo() {
+            if (redoStack.length === 0) return;
+            undoStack.push(JSON.stringify(layers));
+            layers = JSON.parse(redoStack.pop());
+            if (!layers.some(l => l.id === activeLayerId)) activeLayerId = layers[0] ? layers[0].id : 'layer_1';
+            renderLayersList();
+            broadcastState();
+            redraw();
+        }
 
-        document.getElementById('smoothing-toggle').addEventListener('change', (e) => { flashSmoothingEnabled = e.target.checked; });
-        document.getElementById('smoothing-slider').addEventListener('input', (e) => {
-            smoothingStrength = parseInt(e.target.value);
-            document.getElementById('smooth-val').textContent = smoothingStrength;
-        });
+        let lastPointerTime = 0;
+        let lastPointerPos = null;
 
         canvas.addEventListener('pointerdown', (e) => {
+            if (e.clientY < 96) return;
+
             if (currentTool === 'pan' || e.button === 1 || e.spaceKey) {
                 isPanning = true;
                 panStartX = e.clientX - panX;
@@ -593,41 +734,36 @@
 
             const pos = screenToWorld(e.clientX, e.clientY);
 
-            if (currentTool === 'brush' || currentTool === 'eraser') {
+            if (currentTool === 'brush') {
                 isDrawing = true;
-                currentPathPoints = [{ x: pos.x, y: pos.y, w: brushSize }];
+                lastPointerTime = performance.now();
+                lastPointerPos = pos;
+                currentRawPoints = [{ x: pos.x, y: pos.y, w: brushSize }];
                 currentElement = {
-                    type: currentTool,
+                    type: 'brush',
                     color: strokeColor,
                     size: brushSize,
-                    points: currentPathPoints
-                };
-            } else if (currentTool === 'rect' || currentTool === 'circle') {
-                isDrawing = true;
-                currentElement = {
-                    type: currentTool,
-                    color: strokeColor,
-                    size: brushSize,
-                    x: pos.x, y: pos.y, w: 0, h: 0
-                };
-            } else if (currentTool === 'line') {
-                isDrawing = true;
-                currentElement = {
-                    type: currentTool,
-                    color: strokeColor,
-                    size: brushSize,
-                    x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y
+                    points: [...currentRawPoints]
                 };
             } else if (currentTool === 'lasso-fill') {
                 isDrawing = true;
-                lassoPoints.push({ x: pos.x, y: pos.y });
+                lassoPoints = [{ x: pos.x, y: pos.y }];
             } else if (currentTool === 'lasso-select') {
                 let clickedInsideSelection = false;
                 if (selectedElements.length > 0) {
-                    clickedInsideSelection = selectedElements.some(item => {
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    selectedElements.forEach(item => {
                         const b = getElementBounds(item.el);
-                        return b && pos.x >= b.x && pos.x <= b.x + b.width && pos.y >= b.y && pos.y <= b.y + b.height;
+                        if (b) {
+                            minX = Math.min(minX, b.x);
+                            minY = Math.min(minY, b.y);
+                            maxX = Math.max(maxX, b.x + b.width);
+                            maxY = Math.max(maxY, b.y + b.height);
+                        }
                     });
+                    if (pos.x >= minX - 10 && pos.x <= maxX + 10 && pos.y >= minY - 10 && pos.y <= maxY + 10) {
+                        clickedInsideSelection = true;
+                    }
                 }
 
                 if (clickedInsideSelection) {
@@ -636,11 +772,10 @@
                     lastDragWorldY = pos.y;
                     saveStateToUndo();
                 } else {
+                    selectedElements = [];
                     isDrawing = true;
                     lassoPoints = [{ x: pos.x, y: pos.y }];
                 }
-            } else if (currentTool === 'text') {
-                openTextInput(e.clientX, e.clientY, pos.x, pos.y);
             }
         });
 
@@ -653,6 +788,7 @@
             }
 
             const pos = screenToWorld(e.clientX, e.clientY);
+            broadcastCursor(pos.x, pos.y);
 
             if (isDraggingSelection) {
                 const dx = pos.x - lastDragWorldX;
@@ -660,69 +796,77 @@
                 selectedElements.forEach(item => translateElement(item.el, dx, dy));
                 lastDragWorldX = pos.x;
                 lastDragWorldY = pos.y;
+                broadcastState();
                 redraw();
                 return;
             }
 
             if (!isDrawing) return;
 
-            if (currentTool === 'brush' || currentTool === 'eraser') {
-                currentPathPoints.push({ x: pos.x, y: pos.y, w: brushSize });
-            } else if (currentTool === 'rect' || currentTool === 'circle') {
-                currentElement.w = pos.x - currentElement.x;
-                currentElement.h = pos.y - currentElement.y;
-            } else if (currentTool === 'line') {
-                currentElement.x2 = pos.x;
-                currentElement.y2 = pos.y;
+            if (currentTool === 'brush') {
+                let calculatedWidth = brushSize;
+                if (velocityEnabled && lastPointerPos) {
+                    const now = performance.now();
+                    const dt = Math.max(1, now - lastPointerTime);
+                    const dist = Math.hypot(pos.x - lastPointerPos.x, pos.y - lastPointerPos.y);
+                    const speed = dist / dt; // px per ms
+                    
+                    // Velocity Tapering Logic: Fast -> Thick, Slow -> Thin
+                    const speedFactor = Math.min(3.5, Math.max(0.2, 0.2 + speed * 0.85));
+                    calculatedWidth = brushSize * speedFactor;
+                    lastPointerTime = now;
+                    lastPointerPos = pos;
+                }
+
+                currentRawPoints.push({ x: pos.x, y: pos.y, w: calculatedWidth });
+                currentElement.points = getSmoothStrokePoints(currentRawPoints, velocityEnabled, brushSize);
             } else if (currentTool === 'lasso-fill' || currentTool === 'lasso-select') {
                 lassoPoints.push({ x: pos.x, y: pos.y });
             }
             redraw();
         });
 
-        window.addEventListener('pointerup', (e) => {
+        window.addEventListener('pointerup', () => {
             if (isPanning) { isPanning = false; return; }
-            if (isDraggingSelection) { isDraggingSelection = false; return; }
+            if (isDraggingSelection) { isDraggingSelection = false; broadcastState(); return; }
             if (!isDrawing) return;
             isDrawing = false;
 
             const activeLayer = layers.find(l => l.id === activeLayerId);
 
-            if ((currentTool === 'brush' || currentTool === 'eraser') && currentElement) {
-                if (flashSmoothingEnabled && currentTool === 'brush' && currentElement.points.length > 2) {
-                    currentElement.points = simplifyAndSmoothPath(currentElement.points, smoothingStrength);
-                }
+            if (currentTool === 'brush' && currentElement) {
                 saveStateToUndo();
                 activeLayer.elements.push(currentElement);
                 currentElement = null;
-            } else if ((currentTool === 'rect' || currentTool === 'circle' || currentTool === 'line') && currentElement) {
-                if (Math.abs(currentElement.w || (currentElement.x2 - currentElement.x1)) > 2) {
-                    saveStateToUndo();
-                    activeLayer.elements.push(currentElement);
-                }
-                currentElement = null;
+                broadcastState();
             } else if (currentTool === 'lasso-fill') {
                 if (lassoPoints.length >= 3) {
                     saveStateToUndo();
                     activeLayer.elements.push({
                         type: 'lasso-fill',
                         color: strokeColor,
-                        size: brushSize,
+                        size: 2,
                         points: [...lassoPoints]
                     });
+                    broadcastState();
                 }
                 lassoPoints = [];
             } else if (currentTool === 'lasso-select') {
                 selectedElements = [];
-                layers.forEach(layer => {
-                    if (!layer.visible) return;
-                    layer.elements.forEach(el => {
-                        const bounds = getElementBounds(el);
-                        if (bounds && lassoPoints.some(p => p.x >= bounds.x && p.x <= bounds.x + bounds.width && p.y >= bounds.y && p.y <= bounds.y + bounds.height)) {
-                            selectedElements.push({ el: el, layerId: layer.id });
-                        }
+                if (lassoPoints.length >= 3) {
+                    layers.forEach(layer => {
+                        if (!layer.visible) return;
+                        layer.elements.forEach(el => {
+                            const bounds = getElementBounds(el);
+                            if (bounds) {
+                                const center = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+                                if (isPointInPolygon(center, lassoPoints)) {
+                                    selectedElements.push({ el: el, layerId: layer.id });
+                                }
+                            }
+                        });
                     });
-                });
+                }
                 lassoPoints = [];
             }
             redraw();
@@ -730,7 +874,7 @@
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomFactor = 1.1;
+            const zoomFactor = 1.08;
             const oldZoom = zoom;
             if (e.deltaY < 0) {
                 zoom = Math.min(10, zoom * zoomFactor);
@@ -744,89 +888,145 @@
             redraw();
         }, { passive: false });
 
-        function openTextInput(screenX, screenY, worldX, worldY) {
-            textOverlay.style.display = 'block';
-            textOverlay.style.left = screenX + 'px';
-            textOverlay.style.top = screenY + 'px';
-            textOverlay.value = '';
-            textOverlay.focus();
+        document.getElementById('btn-reset-view').addEventListener('click', () => {
+            zoom = 1;
+            panX = 0;
+            panY = 0;
+            document.getElementById('zoom-status').textContent = '100%';
+            redraw();
+        });
 
-            function commitText() {
-                const val = textOverlay.value.trim();
-                if (val) {
-                    const activeLayer = layers.find(l => l.id === activeLayerId);
-                    if (activeLayer && !activeLayer.locked) {
-                        saveStateToUndo();
-                        activeLayer.elements.push({
-                            type: 'text',
-                            text: val,
-                            color: strokeColor,
-                            size: brushSize,
-                            x: worldX,
-                            y: worldY
-                        });
-                        redraw();
-                    }
+        const toolBtns = document.querySelectorAll('.tool-btn[data-tool]');
+        toolBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                toolBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.getAttribute('data-tool');
+                if (currentTool !== 'lasso-select') {
+                    selectedElements = [];
+                    redraw();
                 }
-                textOverlay.style.display = 'none';
-                textOverlay.onblur = null;
-                textOverlay.onkeydown = null;
-            }
+            });
+        });
 
-            textOverlay.onblur = commitText;
-            textOverlay.onkeydown = (ev) => {
-                if (ev.key === 'Enter') {
-                    ev.preventDefault();
-                    commitText();
+        const strokeColorInput = document.getElementById('stroke-color');
+        const colorDots = document.querySelectorAll('.color-dot');
+
+        function setActiveColor(color) {
+            strokeColor = color;
+            strokeColorInput.value = color;
+            colorDots.forEach(dot => {
+                if (dot.getAttribute('data-color').toLowerCase() === color.toLowerCase()) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
                 }
-            };
+            });
         }
 
-        document.getElementById('btn-duplicate').addEventListener('click', () => {
-            if (selectedElements.length === 0) return;
-            saveStateToUndo();
-            const newSelection = [];
-            selectedElements.forEach(item => {
-                const targetLayer = layers.find(l => l.id === item.layerId);
-                if (targetLayer) {
-                    const clone = JSON.parse(JSON.stringify(item.el));
-                    translateElement(clone, 20, 20);
-                    targetLayer.elements.push(clone);
-                    newSelection.push({ el: clone, layerId: item.layerId });
-                }
-            });
-            selectedElements = newSelection;
-            redraw();
+        strokeColorInput.addEventListener('input', (e) => setActiveColor(e.target.value));
+
+        colorDots.forEach(dot => {
+            dot.addEventListener('click', () => setActiveColor(dot.getAttribute('data-color')));
         });
 
-        document.getElementById('btn-delete').addEventListener('click', () => {
-            if (selectedElements.length === 0) return;
-            saveStateToUndo();
-            selectedElements.forEach(item => {
-                const targetLayer = layers.find(l => l.id === item.layerId);
-                if (targetLayer) {
-                    targetLayer.elements = targetLayer.elements.filter(el => el !== item.el);
-                }
-            });
-            selectedElements = [];
-            redraw();
+        document.getElementById('brush-size').addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+            document.getElementById('size-val').textContent = brushSize + 'px';
         });
+
+        document.getElementById('velocity-toggle').addEventListener('change', (e) => {
+            velocityEnabled = e.target.checked;
+        });
+
+        const smoothingSlider = document.getElementById('smoothing-slider');
+        const smoothToggle = document.getElementById('smooth-toggle');
+
+        smoothToggle.addEventListener('change', (e) => smoothEnabled = e.target.checked);
+
+        smoothingSlider.addEventListener('input', (e) => {
+            smoothingAmount = parseInt(e.target.value);
+            const displayPx = Math.round((smoothingAmount / 100) * 8) + 1;
+            document.getElementById('smooth-val').textContent = displayPx + 'px';
+        });
+
+        document.getElementById('btn-image-tool').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                const img = new Image();
+                img.onload = () => {
+                    const activeLayer = layers.find(l => l.id === activeLayerId);
+                    if (activeLayer) {
+                        saveStateToUndo();
+                        const worldCenter = screenToWorld(window.innerWidth / 2, window.innerHeight / 2);
+                        const aspect = img.width / img.height;
+                        const w = Math.min(350, img.width);
+                        const h = w / aspect;
+                        activeLayer.elements.push({
+                            type: 'image',
+                            src: dataUrl,
+                            x: worldCenter.x - w / 2,
+                            y: worldCenter.y - h / 2,
+                            w: w,
+                            h: h
+                        });
+                        broadcastState();
+                        redraw();
+                    }
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        const layersPanel = document.getElementById('layers-panel');
+        document.getElementById('btn-toggle-layers').addEventListener('click', () => {
+            layersPanel.style.display = layersPanel.style.display === 'block' ? 'none' : 'block';
+        });
+
+        function moveLayerUp(index) {
+            if (index < layers.length - 1) {
+                saveStateToUndo();
+                const temp = layers[index];
+                layers[index] = layers[index + 1];
+                layers[index + 1] = temp;
+                renderLayersList();
+                broadcastState();
+                redraw();
+            }
+        }
+
+        function moveLayerDown(index) {
+            if (index > 0) {
+                saveStateToUndo();
+                const temp = layers[index];
+                layers[index] = layers[index - 1];
+                layers[index - 1] = temp;
+                renderLayersList();
+                broadcastState();
+                redraw();
+            }
+        }
 
         function renderLayersList() {
             const listContainer = document.getElementById('layers-list');
             listContainer.innerHTML = '';
 
-            layers.slice().reverse().forEach((layer, index) => {
-                const actualIndex = layers.length - 1 - index;
+            layers.slice().reverse().forEach((layer, reverseIndex) => {
+                const actualIndex = layers.length - 1 - reverseIndex;
                 const item = document.createElement('div');
                 item.className = `layer-item ${layer.id === activeLayerId ? 'active' : ''}`;
                 item.innerHTML = `
-                    <span style="flex-grow:1; cursor:pointer;">${layer.name}</span>
-                    <div class="layer-actions">
+                    <span class="flex-1 font-medium truncate text-xs select-none">${layer.name}</span>
+                    <div class="flex items-center gap-1">
+                        <button class="layer-btn" title="Move Layer Up">▲</button>
+                        <button class="layer-btn" title="Move Layer Down">▼</button>
                         <button class="layer-btn" title="Toggle Visibility">${layer.visible ? '👁' : '🚫'}</button>
-                        <button class="layer-btn" title="Move Up" ${actualIndex === layers.length - 1 ? 'disabled style="opacity:0.3"' : ''}>▲</button>
-                        <button class="layer-btn" title="Move Down" ${actualIndex === 0 ? 'disabled style="opacity:0.3"' : ''}>▼</button>
-                        <button class="layer-btn" title="Delete">🗑</button>
+                        <button class="layer-btn" title="Delete Layer">🗑</button>
                     </div>
                 `;
 
@@ -835,54 +1035,38 @@
                     renderLayersList();
                 });
 
-                const btns = item.querySelectorAll('.layer-btn');
+                const btns = item.querySelectorAll('button');
                 btns[0].addEventListener('click', (e) => {
                     e.stopPropagation();
-                    layer.visible = !layer.visible;
-                    renderLayersList();
-                    redraw();
+                    moveLayerUp(actualIndex);
                 });
                 btns[1].addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (actualIndex < layers.length - 1) {
-                        const temp = layers[actualIndex];
-                        layers[actualIndex] = layers[actualIndex + 1];
-                        layers[actualIndex + 1] = temp;
-                        saveStateToUndo();
-                        renderLayersList();
-                        redraw();
-                    }
+                    moveLayerDown(actualIndex);
                 });
                 btns[2].addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (actualIndex > 0) {
-                        const temp = layers[actualIndex];
-                        layers[actualIndex] = layers[actualIndex - 1];
-                        layers[actualIndex - 1] = temp;
-                        saveStateToUndo();
-                        renderLayersList();
-                        redraw();
-                    }
+                    layer.visible = !layer.visible;
+                    renderLayersList();
+                    broadcastState();
+                    redraw();
                 });
                 btns[3].addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (layers.length > 1) {
                         saveStateToUndo();
                         layers.splice(actualIndex, 1);
-                        ensureActiveLayerValid();
+                        if (!layers.some(l => l.id === activeLayerId)) {
+                            activeLayerId = layers[0].id;
+                        }
                         renderLayersList();
+                        broadcastState();
                         redraw();
                     }
                 });
 
                 listContainer.appendChild(item);
             });
-        }
-
-        function ensureActiveLayerValid() {
-            if (!layers.some(l => l.id === activeLayerId)) {
-                activeLayerId = layers[0].id;
-            }
         }
 
         document.getElementById('btn-add-layer').addEventListener('click', () => {
@@ -897,34 +1081,43 @@
             });
             activeLayerId = newId;
             renderLayersList();
+            broadcastState();
             redraw();
         });
 
-        document.getElementById('btn-undo').addEventListener('click', () => {
-            if (undoStack.length === 0) return;
-            redoStack.push(JSON.parse(JSON.stringify(layers)));
-            layers = undoStack.pop();
-            ensureActiveLayerValid();
-            renderLayersList();
-            redraw();
-        });
+        document.getElementById('btn-share').addEventListener('click', () => {
+            const toast = document.getElementById('toast');
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
 
-        document.getElementById('btn-redo').addEventListener('click', () => {
-            if (redoStack.length === 0) return;
-            undoStack.push(JSON.parse(JSON.stringify(layers)));
-            layers = redoStack.pop();
-            ensureActiveLayerValid();
-            renderLayersList();
-            redraw();
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
         });
 
         document.getElementById('btn-export').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = 'vector-canvas.png';
+            link.download = 'vector-studio-export.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
 
+        document.getElementById('btn-undo').addEventListener('click', undo);
+        document.getElementById('btn-redo').addEventListener('click', redo);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); undo(); }
+                if (e.key === 'y' || e.key === 'Y') { e.preventDefault(); redo(); }
+            }
+        });
+
+        // Initialize application
         resizeCanvas();
         renderLayersList();
     </script>
