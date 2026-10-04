@@ -202,16 +202,17 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global environment variables provided by sandbox runtime or defaults
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'vector-studio-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "demo-api-key",
-            authDomain: "demo-app.firebaseapp.com",
-            projectId: "demo-app",
-            storageBucket: "demo-app.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
+        const firebaseConfig = {
+          apiKey: "AIzaSyALgIl-A-XbPOi4_yX6FnH4CAZNsMRauSg",
+          authDomain: "witboard-1c844.firebaseapp.com",
+          projectId: "witboard-1c844",
+          storageBucket: "witboard-1c844.firebasestorage.app",
+          messagingSenderId: "948928912969",
+          appId: "1:948928912969:web:ae43667f4b44e72d8a2998",
+          measurementId: "G-NE7TG6V6WD"
         };
+
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -284,7 +285,6 @@
             }
         }
 
-        // Firestore Paths - Follow Rule 1: /artifacts/{appId}/public/data/{collectionName}
         function getElementsCollectionPath() {
             return collection(db, 'artifacts', appId, 'public', 'data', 'vector_elements');
         }
@@ -293,7 +293,6 @@
             return collection(db, 'artifacts', appId, 'public', 'data', 'vector_cursors');
         }
 
-        // Real-Time Elements Listener
         let unsubscribeElements = null;
         function subscribeToRoomElements() {
             if (unsubscribeElements) unsubscribeElements();
@@ -308,7 +307,6 @@
                     }
                 });
 
-                // Reconstruct image objects if necessary
                 roomElements.forEach(el => {
                     if (el.type === 'image' && el.src && (!el.img || el.img.src !== el.src)) {
                         const img = new Image();
@@ -327,7 +325,6 @@
             });
         }
 
-        // Real-Time Cursors & Presence Listener
         let unsubscribeCursors = null;
         function subscribeToCursors() {
             if (unsubscribeCursors) unsubscribeCursors();
@@ -341,7 +338,6 @@
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     if (data && data.roomId === state.currentRoomId && docSnap.id !== state.userId) {
-                        // Filter out stale cursors inactive for > 15 seconds
                         if (now - (data.lastSeen || 0) < 15000) {
                             updatedCursors[docSnap.id] = data;
                             activeCollaborators[docSnap.id] = {
@@ -361,12 +357,11 @@
             });
         }
 
-        // Broadcast current user's cursor position (throttled)
         window.broadcastCursorPosition = function(pt) {
             if (!state.userId || !db) return;
 
             const now = Date.now();
-            if (now - lastCursorBroadcast < 50) return; // ~20fps throttle
+            if (now - lastCursorBroadcast < 50) return;
             lastCursorBroadcast = now;
 
             const userCursorDoc = doc(db, 'artifacts', appId, 'public', 'data', 'vector_cursors', state.userId);
@@ -380,7 +375,6 @@
             }, { merge: true }).catch(err => console.error("Cursor send error:", err));
         };
 
-        // Firebase Persistence Wrappers
         window.addStorageElement = function(element) {
             saveUndoState();
             const activeLayer = state.layers.find(l => l.id === state.activeLayerId);
@@ -399,7 +393,6 @@
                 updatedAt: Date.now()
             };
 
-            // Convert HTMLImageElement to src string for firestore compatibility
             if (payload.type === 'image' && payload.img) {
                 payload.src = payload.img.src;
                 delete payload.img;
@@ -425,7 +418,6 @@
             deleteDoc(docRef).catch(err => console.error("Firestore delete error:", err));
         };
 
-        // Room switching
         window.switchRoom = function(newRoomId) {
             if (!newRoomId || newRoomId === state.currentRoomId) return;
 
@@ -445,7 +437,6 @@
     </script>
 
     <script>
-        // Main Canvas Engine & UI Logic
         const container = document.getElementById('canvas-container');
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
@@ -681,7 +672,6 @@
             ctx.translate(state.panOffset.x, state.panOffset.y);
             ctx.scale(state.zoom, state.zoom);
 
-            // Render visible layer elements in bottom-to-top order so higher layers render on top
             [...state.layers].reverse().forEach(layer => {
                 if (!layer.visible) return;
 
@@ -725,7 +715,6 @@
                 drawTaperedStroke(ctx, liveProcessed, state.brushColor);
             }
 
-            // Live lasso select indicator
             if (state.isLassoing && state.lassoPoints.length > 1) {
                 ctx.save();
                 ctx.strokeStyle = '#0f172a';
@@ -743,7 +732,6 @@
                 ctx.restore();
             }
 
-            // Live lasso fill shape preview
             if (state.isLassoFilling && state.lassoPoints.length > 1) {
                 ctx.save();
                 ctx.strokeStyle = state.brushColor;
@@ -761,7 +749,6 @@
                 ctx.restore();
             }
 
-            // Overall selection bounding box
             const selectionBox = getCombinedSelectionBounds();
             if (selectionBox) {
                 ctx.save();
@@ -784,7 +771,6 @@
                 ctx.restore();
             }
 
-            // Render Remote Multiplayer Cursors directly on Canvas
             drawRemoteCursors(ctx);
 
             ctx.restore();
@@ -802,7 +788,6 @@
                     const scale = 1 / Math.max(0.5, state.zoom);
                     context.scale(scale, scale);
 
-                    // Pointer arrow icon
                     context.fillStyle = c.color || '#3b82f6';
                     context.strokeStyle = '#ffffff';
                     context.lineWidth = 1.5;
@@ -818,8 +803,6 @@
                     context.closePath();
                     context.fill();
                     context.stroke();
-
-                    // Name Tag pill
                     context.fillStyle = c.color || '#3b82f6';
                     context.font = 'bold 11px Inter, sans-serif';
                     const textWidth = context.measureText(c.name || 'Artist').width;
